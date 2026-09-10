@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+import '../../widgets/primary_button.dart';
+import '../../widgets/task_card.dart';
 import 'task_detail_screen.dart';
 
 class FindTasksScreen extends StatefulWidget {
@@ -11,8 +16,11 @@ class FindTasksScreen extends StatefulWidget {
 
 class _FindTasksScreenState extends State<FindTasksScreen> {
   String _selectedPill = 'All';
+  String _selectedCategory = 'All';
+  String _selectedLocationType = 'All';
+  String _sortBy = 'Default';
 
-  final List<TaskModel> _mockAvailableTasks = [
+  final List<TaskModel> _allAvailableTasks = [
     TaskModel(
       id: 101,
       title: 'Store Audit',
@@ -67,28 +75,204 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
     ),
   ];
 
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                top: 24,
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Filter & Sort Tasks', style: AppTypography.sectionTitle),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, color: AppColors.secondaryText),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Category Filter
+                  const Text('Task Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: ['All', 'Store Audit', 'Product Check', 'Restaurant Audit', 'Surveys'].map((cat) {
+                      final isSelected = _selectedCategory == cat;
+                      return ChoiceChip(
+                        selected: isSelected,
+                        label: Text(cat),
+                        selectedColor: AppColors.primaryBlue,
+                        backgroundColor: AppColors.appBackground,
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          color: isSelected ? Colors.white : AppColors.darkNavy,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        onSelected: (selected) {
+                          setModalState(() => _selectedCategory = cat);
+                          setState(() => _selectedCategory = cat);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Location Type
+                  const Text('Task Location Type', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: ['All', 'On-site', 'Online'].map((type) {
+                      final isSelected = _selectedLocationType == type;
+                      return ChoiceChip(
+                        selected: isSelected,
+                        label: Text(type == 'All' ? 'All Types' : type),
+                        selectedColor: AppColors.primaryBlue,
+                        backgroundColor: AppColors.appBackground,
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          color: isSelected ? Colors.white : AppColors.darkNavy,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        onSelected: (selected) {
+                          setModalState(() => _selectedLocationType = type);
+                          setState(() => _selectedLocationType = type);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Sort By Reward
+                  const Text('Sort By Payout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: ['Default', 'Highest Payout First'].map((sort) {
+                      final isSelected = _sortBy == sort;
+                      return ChoiceChip(
+                        selected: isSelected,
+                        label: Text(sort),
+                        selectedColor: AppColors.purple,
+                        backgroundColor: AppColors.appBackground,
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          color: isSelected ? Colors.white : AppColors.darkNavy,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        onSelected: (selected) {
+                          setModalState(() => _sortBy = sort);
+                          setState(() => _sortBy = sort);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+
+                  PrimaryButton(
+                    label: 'Apply Filters',
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  List<TaskModel> _getFilteredTasks() {
+    var list = _allAvailableTasks.where((task) {
+      // Category filter
+      if (_selectedCategory != 'All' &&
+          task.category.toLowerCase() != _selectedCategory.toLowerCase()) {
+        return false;
+      }
+
+      // Location type filter
+      if (_selectedLocationType != 'All' &&
+          task.locationType.toLowerCase() != _selectedLocationType.toLowerCase()) {
+        return false;
+      }
+
+      // Pill filter
+      if (_selectedPill == 'Nearby' && task.locationType == 'Online') return false;
+      if (_selectedPill == 'High Reward' && task.reward < 250) return false;
+      if (_selectedPill == 'Surveys' && task.category != 'Surveys') return false;
+
+      return true;
+    }).toList();
+
+    if (_sortBy == 'Highest Payout First') {
+      list.sort((a, b) => b.reward.compareTo(a.reward));
+    }
+
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredTasks = _getFilteredTasks();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.appBackground,
       appBar: AppBar(
         title: const Text(
           'Available Tasks',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.darkNavy),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
+        foregroundColor: AppColors.darkNavy,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
-            onPressed: () {},
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.tune_rounded, color: AppColors.primaryBlue),
+                tooltip: 'Filter Tasks',
+                onPressed: _showFilterBottomSheet,
+              ),
+              if (_selectedCategory != 'All' || _selectedLocationType != 'All' || _sortBy != 'Default')
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
       body: Column(
         children: [
-          // Filter Pills Row (All, Nearby, High Reward, Surveys)
+          // Filter Choice Chips Row (All, Nearby, High Reward, Surveys)
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -105,10 +289,10 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
                       labelStyle: TextStyle(
                         fontSize: 12,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                        color: isSelected ? Colors.white : AppColors.secondaryText,
                       ),
-                      selectedColor: const Color(0xFF2563EB),
-                      backgroundColor: const Color(0xFFF1F5F9),
+                      selectedColor: AppColors.primaryBlue,
+                      backgroundColor: AppColors.appBackground,
                       onSelected: (selected) {
                         setState(() => _selectedPill = pill);
                       },
@@ -120,141 +304,86 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
           ),
           const SizedBox(height: 12),
 
+          // Active filter indicator badge if filters selected
+          if (_selectedCategory != 'All' || _selectedLocationType != 'All' || _sortBy != 'Default')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Row(
+                children: [
+                  const Text('Active Filters: ', style: TextStyle(fontSize: 12, color: AppColors.secondaryText)),
+                  if (_selectedCategory != 'All')
+                    _buildFilterBadge('Category: $_selectedCategory'),
+                  if (_selectedLocationType != 'All')
+                    _buildFilterBadge('Type: $_selectedLocationType'),
+                  if (_sortBy != 'Default')
+                    _buildFilterBadge(_sortBy),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = 'All';
+                        _selectedLocationType = 'All';
+                        _sortBy = 'Default';
+                        _selectedPill = 'All';
+                      });
+                    },
+                    child: const Text('Reset All', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.errorRed)),
+                  ),
+                ],
+              ),
+            ),
+
           // Tasks List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _mockAvailableTasks.length,
-              itemBuilder: (ctx, i) {
-                final task = _mockAvailableTasks[i];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(14.0),
-                        child: Row(
-                          children: [
-                            // Store Thumbnail Box
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.storefront_rounded,
-                                color: Color(0xFF2563EB),
-                                size: 32,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-
-                            // Details
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        task.title,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Color(0xFF0F172A),
-                                        ),
-                                      ),
-                                      const Icon(Icons.favorite_border_rounded,
-                                          size: 18, color: Color(0xFF94A3B8)),
-                                    ],
-                                  ),
-                                  Text(
-                                    task.storeName,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.location_on_outlined,
-                                          size: 13, color: Color(0xFF64748B)),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        task.distance,
-                                        style: const TextStyle(
-                                            fontSize: 11, color: Color(0xFF64748B)),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        '₹${task.reward.toStringAsFixed(0)}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF10B981),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: task.tags.map((tag) {
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 3),
-                                        margin: const EdgeInsets.only(right: 6),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFEFF6FF),
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: Text(
-                                          tag,
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF2563EB),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+            child: filteredTasks.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey),
+                        SizedBox(height: 12),
+                        Text(
+                          'No tasks match active filters',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.darkNavy),
                         ),
-                      ),
+                        SizedBox(height: 4),
+                        Text('Try resetting category or location filters.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                      ],
                     ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontalPadding),
+                    itemCount: filteredTasks.length,
+                    itemBuilder: (ctx, i) {
+                      final task = filteredTasks[i];
+                      return TaskCard(
+                        task: task,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
+                          );
+                        },
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBadge(String label) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.blueChipBg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
       ),
     );
   }
