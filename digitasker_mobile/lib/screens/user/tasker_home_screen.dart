@@ -577,14 +577,26 @@ class _HomeTabState extends State<_HomeTab> {
           ),
         child: Row(
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F5FF),
-                borderRadius: BorderRadius.circular(14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                task.imageUrl.isNotEmpty
+                    ? task.imageUrl
+                    : 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=800&q=80',
+                width: 54,
+                height: 54,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F5FF),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.storefront_rounded, color: AppColors.primaryBlue, size: 26),
+                ),
               ),
-              child: const Icon(Icons.storefront_rounded, color: AppColors.primaryBlue, size: 26),
             ),
             const SizedBox(width: 12),
             Expanded(
