@@ -1,4 +1,6 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
@@ -27,7 +29,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _ifscController;
 
   bool _isEditing = false;
+  Uint8List? _pickedAvatarBytes;
   String? _selectedAvatarUrl;
+
+  Future<void> _pickAvatarImage(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _pickedAvatarBytes = bytes;
+          _selectedAvatarUrl = null;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile photo updated successfully!'),
+              backgroundColor: AppColors.successGreen,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking profile image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to open ${source == ImageSource.camera ? 'camera' : 'gallery'}. Please grant permissions or try selecting a preset avatar.'),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
+    }
+  }
 
   void _showAvatarPickerModal(BuildContext context) {
     final sampleAvatars = [
@@ -65,12 +106,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               title: const Text('Take Photo with Camera', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               subtitle: const Text('Capture new photo for KYC verification', style: TextStyle(fontSize: 11)),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(ctx);
-                setState(() => _selectedAvatarUrl = sampleAvatars[0]);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Profile photo updated successfully!'), backgroundColor: AppColors.successGreen),
-                );
+                await _pickAvatarImage(ImageSource.camera);
               },
             ),
             ListTile(
@@ -81,12 +119,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               subtitle: const Text('Select image from device gallery', style: TextStyle(fontSize: 11)),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(ctx);
-                setState(() => _selectedAvatarUrl = sampleAvatars[1]);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Profile photo updated successfully!'), backgroundColor: AppColors.successGreen),
-                );
+                await _pickAvatarImage(ImageSource.gallery);
               },
             ),
             const SizedBox(height: 14),
@@ -98,7 +133,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return GestureDetector(
                   onTap: () {
                     Navigator.pop(ctx);
-                    setState(() => _selectedAvatarUrl = url);
+                    setState(() {
+                      _selectedAvatarUrl = url;
+                      _pickedAvatarBytes = null;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Preset avatar selected!'), backgroundColor: AppColors.successGreen),
                     );
@@ -195,29 +233,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           radius: 36,
                           backgroundColor: const Color(0xFFE2E8F0),
                           child: ClipOval(
-                            child: _selectedAvatarUrl != null
-                                ? Image.network(
-                                    _selectedAvatarUrl!,
+                            child: _pickedAvatarBytes != null
+                                ? Image.memory(
+                                    _pickedAvatarBytes!,
                                     width: 72,
                                     height: 72,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Image.asset(
-                                      'assets/ui/profile_avatar.png',
-                                      width: 72,
-                                      height: 72,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, size: 36, color: AppColors.primaryBlue),
                                   )
-                                : Image.asset(
-                                    'assets/ui/profile_avatar.png',
-                                    width: 72,
-                                    height: 72,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Text(
-                                      user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'R',
-                                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
-                                    ),
-                                  ),
+                                : (_selectedAvatarUrl != null
+                                    ? Image.network(
+                                        _selectedAvatarUrl!,
+                                        width: 72,
+                                        height: 72,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Image.asset(
+                                          'assets/ui/profile_avatar.png',
+                                          width: 72,
+                                          height: 72,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        'assets/ui/profile_avatar.png',
+                                        width: 72,
+                                        height: 72,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Text(
+                                          user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'R',
+                                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                                        ),
+                                      )),
                           ),
                         ),
                         Positioned(
