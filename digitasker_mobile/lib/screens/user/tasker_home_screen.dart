@@ -7,9 +7,12 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/app_drawer.dart';
 import 'find_tasks_screen.dart';
+import 'my_tasks_screen.dart';
 import 'notifications_screen.dart';
+import 'offline_mode_screen.dart';
 import 'profile_screen.dart';
 import 'task_detail_screen.dart';
+import 'training_screen.dart';
 import 'wallet_screen.dart';
 
 class TaskerHomeScreen extends StatefulWidget {
@@ -27,6 +30,9 @@ class _TaskerHomeScreenState extends State<TaskerHomeScreen> {
     final pages = <Widget>[
       const _HomeTab(),
       const FindTasksScreen(),
+      const MyTasksScreen(),
+      const TrainingScreen(),
+      const OfflineModeScreen(),
       const WalletScreen(),
       const NotificationsScreen(),
       const ProfileScreen(),
@@ -39,8 +45,14 @@ class _TaskerHomeScreenState extends State<TaskerHomeScreen> {
       ),
       body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: _BottomNav(
-        selectedIndex: _selectedIndex,
-        onChanged: (index) => setState(() => _selectedIndex = index),
+        selectedIndex: _selectedIndex > 4 ? 4 : _selectedIndex,
+        onChanged: (index) {
+          int mappedIndex = index;
+          if (index == 2) mappedIndex = 2; // My Tasks
+          if (index == 3) mappedIndex = 5; // Wallet
+          if (index == 4) mappedIndex = 7; // Profile
+          setState(() => _selectedIndex = mappedIndex);
+        },
       ),
     );
   }
@@ -56,9 +68,9 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     const items = [
       (Icons.home_outlined, Icons.home_rounded, 'Home'),
-      (Icons.assignment_outlined, Icons.assignment_rounded, 'Tasks'),
+      (Icons.search_rounded, Icons.search_rounded, 'Find'),
+      (Icons.assignment_outlined, Icons.assignment_rounded, 'My Tasks'),
       (Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Wallet'),
-      (Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages'),
       (Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
     ];
 

@@ -4,225 +4,306 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../auth/login_screen.dart';
+import 'find_tasks_screen.dart';
+import 'my_tasks_screen.dart';
 import 'notifications_screen.dart';
 import 'wallet_screen.dart';
-import 'find_tasks_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  late TextEditingController _cityController;
+  late TextEditingController _upiController;
+  late TextEditingController _bankAccountController;
+  late TextEditingController _ifscController;
+
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    _nameController = TextEditingController(text: user?.name ?? 'Rahul Sharma');
+    _emailController = TextEditingController(text: user?.email ?? 'rahul.sharma@gmail.com');
+    _phoneController = TextEditingController(text: user?.phone ?? '+91 7360002233');
+    _cityController = TextEditingController(text: 'Zirakpur, Punjab');
+    _upiController = TextEditingController(text: '7360002233@upi');
+    _bankAccountController = TextEditingController(text: '9876543210123');
+    _ifscController = TextEditingController(text: 'SBIN0004178');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _cityController.dispose();
+    _upiController.dispose();
+    _bankAccountController.dispose();
+    _ifscController.dispose();
+    super.dispose();
+  }
+
+  void _saveProfile() {
+    if (_formKey.currentState?.validate() == true) {
+      setState(() => _isEditing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile details updated successfully!'),
+          backgroundColor: AppColors.successGreen,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final user = auth.user;
 
-    final items = [
-      (Icons.person_outline_rounded, 'My Profile', '', 1),
-      (Icons.badge_outlined, 'My Documents', 'Verified', 2),
-      (Icons.history_rounded, 'Task History', '', 3),
-      (Icons.account_balance_wallet_outlined, 'Payment Settings', '', 4),
-      (Icons.notifications_none_rounded, 'Notifications', '', 5),
-      (Icons.help_outline_rounded, 'Help & Support', '', 6),
-      (Icons.info_outline_rounded, 'About DigiLites Studio', '', 7),
-      (Icons.logout_rounded, 'Logout', '', 8),
-    ];
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.darkNavy)),
         backgroundColor: Colors.white,
         elevation: 0,
+        title: Text('My Profile', style: AppTypography.screenTitle.copyWith(fontSize: 18)),
         actions: [
           IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings & Privacy menu')),
-              );
-            },
-            icon: const Icon(Icons.settings_outlined, color: AppColors.darkNavy),
+            onPressed: () => setState(() => _isEditing = !_isEditing),
+            icon: Icon(_isEditing ? Icons.close_rounded : Icons.edit_outlined, color: AppColors.primaryBlue),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
-        children: [
-          // Profile Avatar & Verification
-          Center(
-            child: Stack(
-              children: [
-                CircleAvatar(
-                  radius: 41,
-                  backgroundColor: const Color(0xFFE9EEF5),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/ui/profile_avatar.png',
-                      width: 82,
-                      height: 82,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Text(
-                        user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'R',
-                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: const Icon(Icons.edit_rounded, color: Colors.white, size: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Center(child: Text(user?.name ?? 'Rahul Sharma', style: AppTypography.sectionTitle)),
-          Center(child: Text('Auditor since Jan 2026', style: AppTypography.metadata)),
-          const SizedBox(height: 5),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Profile Card Header
+            Container(
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.blueChipBg,
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 4))],
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.verified_rounded, color: AppColors.primaryBlue, size: 14),
-                  const SizedBox(width: 4),
-                  Text('Verified', style: AppTypography.metadata.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w800)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Metrics
-          Row(
-            children: [
-              Expanded(child: _metric('48', 'Tasks')),
-              Expanded(child: _metric('4.8', 'Rating')),
-              Expanded(child: _metric('12', 'Badges')),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Options List
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.borderColor),
-            ),
-            child: Column(
-              children: items.map((e) {
-                final isLogout = e.$4 == 8;
-                return InkWell(
-                  onTap: () async {
-                    if (e.$4 == 8) {
-                      // Logout
-                      await auth.logout();
-                      if (!context.mounted) return;
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    } else if (e.$4 == 5) {
-                      // Notifications
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                      );
-                    } else if (e.$4 == 4) {
-                      // Wallet Settings
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const WalletScreen()),
-                      );
-                    } else if (e.$4 == 3) {
-                      // Task History
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const FindTasksScreen()),
-                      );
-                    } else if (e.$4 == 6 || e.$4 == 7) {
-                      // Support / About
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('DigiLites Studio Platform v1.0.0 | Support: +91 7360002233'),
-                          backgroundColor: AppColors.primaryBlue,
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${e.$2} details opened')),
-                      );
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                    decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: AppColors.borderColor)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(e.$1, size: 20, color: isLogout ? AppColors.errorRed : AppColors.darkNavy),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            e.$2,
-                            style: AppTypography.body.copyWith(
-                              color: isLogout ? AppColors.errorRed : AppColors.darkNavy,
-                              fontWeight: FontWeight.w500,
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 36,
+                        backgroundColor: const Color(0xFFE2E8F0),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/ui/profile_avatar.png',
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Text(
+                              user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'R',
+                              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
                             ),
                           ),
                         ),
-                        if (e.$3.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.blueChipBg,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              e.$3,
-                              style: AppTypography.metadata.copyWith(
-                                color: AppColors.primaryBlue,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 10,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primaryBlue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(user?.name ?? 'Rahul Sharma', style: AppTypography.cardTitle.copyWith(fontSize: 18)),
+                        const SizedBox(height: 3),
+                        Text(user?.email ?? 'rahul.sharma@gmail.com', style: AppTypography.metadata),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(6)),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.verified_rounded, size: 12, color: Color(0xFF15803D)),
+                                  SizedBox(width: 4),
+                                  Text('KYC Verified', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF15803D))),
+                                ],
                               ),
                             ),
-                          ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.chevron_right_rounded, color: AppColors.secondaryText, size: 18),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(6)),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.star_rounded, size: 12, color: Color(0xFFD97706)),
+                                  SizedBox(width: 3),
+                                  Text('4.9 Rating', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
-                );
-              }).toList(),
+                ],
+              ),
             ),
+            const SizedBox(height: 16),
+
+            // Personal Information Section
+            _buildSectionCard(
+              title: 'Personal Information',
+              icon: Icons.person_outline_rounded,
+              children: [
+                _buildField('Full Name', _nameController, Icons.person_outline, enabled: _isEditing),
+                const SizedBox(height: 12),
+                _buildField('Email Address', _emailController, Icons.email_outlined, enabled: _isEditing),
+                const SizedBox(height: 12),
+                _buildField('Mobile Phone', _phoneController, Icons.phone_outlined, enabled: _isEditing),
+                const SizedBox(height: 12),
+                _buildField('City / Region', _cityController, Icons.location_city_outlined, enabled: _isEditing),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Payout & Bank Details Section
+            _buildSectionCard(
+              title: 'Payout & Bank Settings',
+              icon: Icons.account_balance_rounded,
+              children: [
+                _buildField('UPI ID', _upiController, Icons.qr_code_rounded, enabled: _isEditing),
+                const SizedBox(height: 12),
+                _buildField('Bank Account Number', _bankAccountController, Icons.credit_card_rounded, enabled: _isEditing),
+                const SizedBox(height: 12),
+                _buildField('IFSC Code', _ifscController, Icons.account_balance_outlined, enabled: _isEditing),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Save Button when Editing
+            if (_isEditing)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _saveProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('Save Profile Changes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                ),
+              ),
+
+            if (_isEditing) const SizedBox(height: 16),
+
+            // Navigation Links
+            _buildNavigationLinks(context, auth),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({required String title, required IconData icon, required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primaryBlue, size: 20),
+              const SizedBox(width: 8),
+              Text(title, style: AppTypography.cardTitle.copyWith(fontSize: 15)),
+            ],
           ),
+          const SizedBox(height: 14),
+          ...children,
         ],
       ),
     );
   }
 
-  Widget _metric(String value, String label) {
-    return Column(
-      children: [
-        Text(value, style: AppTypography.cardTitle.copyWith(fontSize: 18)),
-        Text(label, style: AppTypography.metadata),
-      ],
+  Widget _buildField(String label, TextEditingController controller, IconData icon, {bool enabled = false}) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      style: AppTypography.body.copyWith(fontWeight: FontWeight.w600, color: AppColors.darkNavy),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20, color: const Color(0xFF64748B)),
+        filled: true,
+        fillColor: enabled ? Colors.white : const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFF1F5F9))),
+      ),
+    );
+  }
+
+  Widget _buildNavigationLinks(BuildContext context, AuthProvider auth) {
+    final links = [
+      (Icons.assignment_outlined, 'My Tasks (Completed & Review)', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyTasksScreen()))),
+      (Icons.account_balance_wallet_outlined, 'My Wallet & Withdrawals', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()))),
+      (Icons.notifications_none_rounded, 'Notifications & Alerts', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
+      (Icons.search_rounded, 'Find Tasks & Audits', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FindTasksScreen()))),
+      (
+        Icons.logout_rounded,
+        'Logout Session',
+        () async {
+          await auth.logout();
+          if (!context.mounted) return;
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
+        }
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE2E8F0))),
+      child: Column(
+        children: links.map((link) {
+          final isLogout = link.$2.contains('Logout');
+          return ListTile(
+            leading: Icon(link.$1, color: isLogout ? AppColors.errorRed : AppColors.darkNavy, size: 20),
+            title: Text(link.$2, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5, color: isLogout ? AppColors.errorRed : AppColors.darkNavy)),
+            trailing: const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF94A3B8)),
+            onTap: link.$3 as VoidCallback,
+          );
+        }).toList(),
+      ),
     );
   }
 }

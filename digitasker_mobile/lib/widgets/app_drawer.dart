@@ -3,9 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/user/find_tasks_screen.dart';
+import '../screens/user/my_tasks_screen.dart';
 import '../screens/user/notifications_screen.dart';
+import '../screens/user/offline_mode_screen.dart';
 import '../screens/user/profile_screen.dart';
 import '../screens/user/tasker_home_screen.dart';
+import '../screens/user/training_screen.dart';
 import '../screens/user/wallet_screen.dart';
 import '../screens/vendor/vendor_dashboard_screen.dart';
 import '../theme/app_colors.dart';
@@ -22,15 +25,18 @@ class AppSideDrawer extends StatelessWidget {
     final user = auth.user;
 
     final items = [
-      (Icons.home_rounded, 'Home', 0),
-      (Icons.assignment_outlined, 'Available Tasks', 1),
-      (Icons.account_balance_wallet_outlined, 'My Wallet', 2),
-      (Icons.notifications_none_rounded, 'Notifications', 3),
-      (Icons.person_outline_rounded, 'My Profile', 4),
-      (Icons.storefront_rounded, 'Vendor Dashboard', 5),
+      (Icons.dashboard_rounded, 'Dashboard', 0),
+      (Icons.search_rounded, 'Find Tasks', 1),
+      (Icons.assignment_outlined, 'My Tasks', 2),
+      (Icons.school_outlined, 'Training', 3),
+      (Icons.wifi_off_rounded, 'Offline Mode', 4),
+      (Icons.account_balance_wallet_outlined, 'Wallet', 5),
+      (Icons.notifications_none_rounded, 'Notifications', 6),
+      (Icons.person_outline_rounded, 'Profile', 7),
+      (Icons.storefront_rounded, 'Vendor Dashboard', 8),
       (Icons.group_add_outlined, 'Refer & Earn', 99),
-      (Icons.help_outline_rounded, 'Help & Support', 98),
-      (Icons.logout_rounded, 'Logout', 97),
+      (Icons.help_outline_rounded, 'Support', 98),
+      (Icons.logout_rounded, 'Sign Out', 97),
     ];
 
     return Drawer(
@@ -49,7 +55,7 @@ class AppSideDrawer extends StatelessWidget {
                 onTap: () {
                   Navigator.pop(context);
                   if (onTabSelected != null) {
-                    onTabSelected!(4);
+                    onTabSelected!(7);
                   } else {
                     Navigator.push(
                       context,
@@ -158,7 +164,7 @@ class AppSideDrawer extends StatelessWidget {
                             Navigator.pop(context);
 
                             if (item.$3 == 97) {
-                              // Logout
+                              // Sign Out
                               await auth.logout();
                               if (!context.mounted) return;
                               Navigator.pushAndRemoveUntil(
@@ -172,7 +178,7 @@ class AppSideDrawer extends StatelessWidget {
                             } else if (item.$3 == 99) {
                               // Refer & Earn Modal
                               _showReferralDialog(context);
-                            } else if (onTabSelected != null && item.$3 <= 4) {
+                            } else if (onTabSelected != null && item.$3 <= 7) {
                               onTabSelected!(item.$3);
                             } else {
                               _navigateToScreen(context, item.$3);
@@ -251,15 +257,24 @@ class AppSideDrawer extends StatelessWidget {
         screen = const FindTasksScreen();
         break;
       case 2:
-        screen = const WalletScreen();
+        screen = const MyTasksScreen();
         break;
       case 3:
-        screen = const NotificationsScreen();
+        screen = const TrainingScreen();
         break;
       case 4:
-        screen = const ProfileScreen();
+        screen = const OfflineModeScreen();
         break;
       case 5:
+        screen = const WalletScreen();
+        break;
+      case 6:
+        screen = const NotificationsScreen();
+        break;
+      case 7:
+        screen = const ProfileScreen();
+        break;
+      case 8:
         screen = const VendorDashboardScreen();
         break;
       default:
@@ -277,7 +292,7 @@ class AppSideDrawer extends StatelessWidget {
           children: [
             const Icon(Icons.support_agent_rounded, color: AppColors.primaryBlue),
             const SizedBox(width: 8),
-            Text('Help & Support', style: AppTypography.cardTitle),
+            Text('Support & Help Desk', style: AppTypography.cardTitle),
           ],
         ),
         content: const Column(
