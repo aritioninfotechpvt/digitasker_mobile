@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/user/find_tasks_screen.dart';
 import '../screens/user/my_tasks_screen.dart';
@@ -34,6 +35,7 @@ class AppSideDrawer extends StatelessWidget {
       (Icons.notifications_none_rounded, 'Notifications', 6),
       (Icons.person_outline_rounded, 'Profile', 7),
       (Icons.storefront_rounded, 'Vendor Dashboard', 8),
+      (Icons.dark_mode_outlined, 'Dark Mode', 96),
       (Icons.group_add_outlined, 'Refer & Earn', 99),
       (Icons.help_outline_rounded, 'Support', 98),
       (Icons.logout_rounded, 'Sign Out', 97),
@@ -141,26 +143,43 @@ class AppSideDrawer extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          trailing: item.$2 == 'Notifications'
-                              ? Container(
-                                  width: 24,
-                                  height: 24,
-                                  alignment: Alignment.center,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primaryBlue,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Text(
-                                    '3',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                          trailing: item.$3 == 96
+                              ? Consumer<ThemeProvider>(
+                                  builder: (ctx, themeProv, _) => SizedBox(
+                                    height: 24,
+                                    child: Switch(
+                                      value: themeProv.isDarkMode,
+                                      activeColor: AppColors.primaryBlue,
+                                      onChanged: (val) => themeProv.toggleTheme(val),
                                     ),
                                   ),
                                 )
-                              : const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF94A3B8)),
+                              : (item.$2 == 'Notifications'
+                                  ? Container(
+                                      width: 24,
+                                      height: 24,
+                                      alignment: Alignment.center,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.primaryBlue,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Text(
+                                        '3',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF94A3B8))),
                           onTap: () async {
+                            if (item.$3 == 96) {
+                              final themeProv = Provider.of<ThemeProvider>(context, listen: false);
+                              themeProv.toggleTheme(!themeProv.isDarkMode);
+                              return;
+                            }
+
                             Navigator.pop(context);
 
                             if (item.$3 == 97) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../auth/login_screen.dart';
@@ -357,6 +358,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Theme & Appearance Section
+            Consumer<ThemeProvider>(
+              builder: (context, themeProv, _) {
+                return _buildSectionCard(
+                  title: 'App Theme & Appearance',
+                  icon: themeProv.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              themeProv.isDarkMode ? 'Dark Mode Active 🌙' : 'Light Mode Active ☀️',
+                              style: AppTypography.cardTitle.copyWith(fontSize: 14),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Switch app visual theme appearance',
+                              style: AppTypography.metadata.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                        Switch(
+                          value: themeProv.isDarkMode,
+                          activeColor: AppColors.primaryBlue,
+                          onChanged: (val) {
+                            themeProv.toggleTheme(val);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(val ? '🌙 Dark Mode Activated' : '☀️ Light Mode Activated'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _themeChip(
+                          context: context,
+                          label: '☀️ Light',
+                          isSelected: themeProv.themeMode == ThemeMode.light,
+                          onTap: () => themeProv.setThemeMode(ThemeMode.light),
+                        ),
+                        _themeChip(
+                          context: context,
+                          label: '🌙 Dark',
+                          isSelected: themeProv.themeMode == ThemeMode.dark,
+                          onTap: () => themeProv.setThemeMode(ThemeMode.dark),
+                        ),
+                        _themeChip(
+                          context: context,
+                          label: '⚙️ System',
+                          isSelected: themeProv.themeMode == ThemeMode.system,
+                          onTap: () => themeProv.setThemeMode(ThemeMode.system),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+
             // Save Button when Editing
             if (_isEditing)
               SizedBox(
@@ -454,6 +524,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: link.$3 as VoidCallback,
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _themeChip({
+    required BuildContext context,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryBlue : const Color(0xFFCBD5E1),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : const Color(0xFF334155),
+          ),
+        ),
       ),
     );
   }
