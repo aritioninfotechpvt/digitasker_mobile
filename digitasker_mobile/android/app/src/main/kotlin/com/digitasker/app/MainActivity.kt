@@ -1,4 +1,4 @@
-package com.example.digitasker_mobile
+package com.digitasker.app
 
 import io.flutter.embedding.android.FlutterActivity
 
