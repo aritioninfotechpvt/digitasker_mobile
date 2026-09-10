@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../screens/auth/login_screen.dart';
 import '../screens/user/find_tasks_screen.dart';
-import '../screens/user/wallet_screen.dart';
 import '../screens/user/notifications_screen.dart';
 import '../screens/user/profile_screen.dart';
-import '../screens/auth/login_screen.dart';
+import '../screens/user/tasker_home_screen.dart';
+import '../screens/user/wallet_screen.dart';
+import '../screens/vendor/vendor_dashboard_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -21,10 +23,11 @@ class AppSideDrawer extends StatelessWidget {
 
     final items = [
       (Icons.home_rounded, 'Home', 0),
-      (Icons.assignment_outlined, 'My Tasks', 1),
+      (Icons.assignment_outlined, 'Available Tasks', 1),
       (Icons.account_balance_wallet_outlined, 'My Wallet', 2),
       (Icons.notifications_none_rounded, 'Notifications', 3),
       (Icons.person_outline_rounded, 'My Profile', 4),
+      (Icons.storefront_rounded, 'Vendor Dashboard', 5),
       (Icons.group_add_outlined, 'Refer & Earn', 99),
       (Icons.help_outline_rounded, 'Help & Support', 98),
       (Icons.logout_rounded, 'Logout', 97),
@@ -158,18 +161,14 @@ class AppSideDrawer extends StatelessWidget {
                               // Logout
                               await auth.logout();
                               if (!context.mounted) return;
-                              Navigator.pushReplacement(
+                              Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                (route) => false,
                               );
                             } else if (item.$3 == 98) {
                               // Help Support
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Support Helpline: +91 7360002233 | support@digilitesstudio.com'),
-                                  backgroundColor: AppColors.primaryBlue,
-                                ),
-                              );
+                              _showHelpSupportDialog(context);
                             } else if (item.$3 == 99) {
                               // Refer & Earn Modal
                               _showReferralDialog(context);
@@ -241,6 +240,13 @@ class AppSideDrawer extends StatelessWidget {
   void _navigateToScreen(BuildContext context, int index) {
     Widget screen;
     switch (index) {
+      case 0:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const TaskerHomeScreen()),
+          (route) => false,
+        );
+        return;
       case 1:
         screen = const FindTasksScreen();
         break;
@@ -253,10 +259,66 @@ class AppSideDrawer extends StatelessWidget {
       case 4:
         screen = const ProfileScreen();
         break;
+      case 5:
+        screen = const VendorDashboardScreen();
+        break;
       default:
         return;
     }
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  }
+
+  void _showHelpSupportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.support_agent_rounded, color: AppColors.primaryBlue),
+            const SizedBox(width: 8),
+            Text('Help & Support', style: AppTypography.cardTitle),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Need assistance with your audits, payments, or account?', style: TextStyle(fontSize: 13, color: AppColors.bodyText)),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.phone_in_talk_rounded, color: AppColors.primaryBlue, size: 20),
+                SizedBox(width: 10),
+                SelectableText('+91 7360002233', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.darkNavy)),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.email_outlined, color: AppColors.primaryBlue, size: 20),
+                SizedBox(width: 10),
+                SelectableText('support@digilitesstudio.com', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5, color: AppColors.primaryBlue)),
+              ],
+            ),
+            SizedBox(height: 12),
+            Text('Hours: Mon - Sat (9:00 AM - 7:00 PM IST)', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Support phone number copied: +91 7360002233')),
+              );
+            },
+            child: const Text('Copy Helpline'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showReferralDialog(BuildContext context) {
