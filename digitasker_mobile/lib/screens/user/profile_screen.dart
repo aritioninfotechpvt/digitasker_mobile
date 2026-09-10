@@ -1,302 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../auth/login_screen.dart';
-import 'notifications_screen.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_typography.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-    final user = auth.user;
-
+    final items = [
+      (Icons.person_outline_rounded, 'My Profile', ''),
+      (Icons.badge_outlined, 'My Documents', 'Verified'),
+      (Icons.history_rounded, 'Task History', ''),
+      (Icons.account_balance_wallet_outlined, 'Payment Settings', ''),
+      (Icons.notifications_none_rounded, 'Notifications', ''),
+      (Icons.help_outline_rounded, 'Help & Support', ''),
+      (Icons.info_outline_rounded, 'About', ''),
+      (Icons.logout_rounded, 'Logout', ''),
+    ];
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF0F172A)),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings menu opened')),
-              );
-            },
+      backgroundColor: Colors.white,
+      appBar: AppBar(actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.settings_outlined))]),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
+        children: [
+          Center(child: Stack(children: [
+            CircleAvatar(radius: 41, backgroundColor: const Color(0xFFE9EEF5), child: ClipOval(child: Image.asset('assets/ui/profile_avatar.png', width: 82, height: 82, fit: BoxFit.cover))),
+            Positioned(right: 0, bottom: 0, child: Container(width: 24, height: 24, decoration: BoxDecoration(color: AppColors.primaryBlue, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)), child: const Icon(Icons.edit_rounded, color: Colors.white, size: 13))),
+          ])),
+          const SizedBox(height: 10),
+          Center(child: Text('Rahul Sharma', style: AppTypography.sectionTitle)),
+          Center(child: Text('Auditor since Jan 2026', style: AppTypography.metadata)),
+          const SizedBox(height: 5),
+          Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4), decoration: BoxDecoration(color: AppColors.blueChipBg, borderRadius: BorderRadius.circular(12)), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.verified_rounded, color: AppColors.primaryBlue, size: 14), const SizedBox(width: 4), Text('Verified', style: AppTypography.metadata.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w800))]))),
+          const SizedBox(height: 20),
+          Row(children: [Expanded(child: _metric('48', 'Tasks')), Expanded(child: _metric('4.8', 'Rating')), Expanded(child: _metric('12', 'Badges'))]),
+          const SizedBox(height: 20),
+          Container(
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor)),
+            child: Column(children: items.map((e) => InkWell(
+              onTap: () {},
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.borderColor))),
+                child: Row(children: [Icon(e.$1, size: 20, color: AppColors.darkNavy), const SizedBox(width: 12), Expanded(child: Text(e.$2, style: AppTypography.body.copyWith(color: AppColors.darkNavy, fontWeight: FontWeight.w500))), if (e.$3.isNotEmpty) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: AppColors.blueChipBg, borderRadius: BorderRadius.circular(10)), child: Text(e.$3, style: AppTypography.metadata.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700, fontSize: 10))), const SizedBox(width: 6), const Icon(Icons.chevron_right_rounded, color: AppColors.secondaryText, size: 18)]),
+              ),
+            )).toList()),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            // Avatar & Name Section
-            Center(
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 44,
-                        backgroundColor: const Color(0xFF2563EB).withOpacity(0.12),
-                        child: Text(
-                          user?.name.isNotEmpty == true
-                              ? user!.name[0].toUpperCase()
-                              : 'R',
-                          style: const TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2563EB),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF2563EB),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    user?.name ?? 'Rahul Sharma',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Auditor since Jan 2026',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF2563EB)),
-                        SizedBox(width: 4),
-                        Text(
-                          'Verified',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2563EB),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Stats Row (48 Tasks | 4.8 Rating | 12 Badges)
-            Row(
-              children: [
-                _buildStatBox('48', 'Tasks'),
-                const SizedBox(width: 12),
-                _buildStatBox('4.8', 'Rating'),
-                const SizedBox(width: 12),
-                _buildStatBox('12', 'Badges'),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Profile Menu List
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.person_outline_rounded,
-                    title: 'My Profile',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1, indent: 56, endIndent: 20),
-                  _buildMenuItem(
-                    icon: Icons.description_outlined,
-                    title: 'My Documents',
-                    trailingPill: 'Verified',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1, indent: 56, endIndent: 20),
-                  _buildMenuItem(
-                    icon: Icons.history_rounded,
-                    title: 'Task History',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1, indent: 56, endIndent: 20),
-                  _buildMenuItem(
-                    icon: Icons.credit_card_rounded,
-                    title: 'Payment Settings',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1, indent: 56, endIndent: 20),
-                  _buildMenuItem(
-                    icon: Icons.notifications_none_rounded,
-                    title: 'Notifications',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1, indent: 56, endIndent: 20),
-                  _buildMenuItem(
-                    icon: Icons.help_outline_rounded,
-                    title: 'Help & Support',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1, indent: 56, endIndent: 20),
-                  _buildMenuItem(
-                    icon: Icons.logout_rounded,
-                    title: 'Logout',
-                    titleColor: Colors.redAccent,
-                    onTap: () async {
-                      await auth.logout();
-                      if (!context.mounted) return;
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildStatBox(String value, String label) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    String? trailingPill,
-    Color titleColor = const Color(0xFF0F172A),
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: titleColor == Colors.redAccent ? Colors.redAccent : const Color(0xFF64748B)),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          color: titleColor,
-        ),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (trailingPill != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              margin: const EdgeInsets.only(right: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, size: 12, color: Color(0xFF2563EB)),
-                  const SizedBox(width: 4),
-                  Text(
-                    trailingPill,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
-        ],
-      ),
-      onTap: onTap,
-    );
-  }
+  Widget _metric(String value, String label) => Column(children: [Text(value, style: AppTypography.cardTitle.copyWith(fontSize: 18)), Text(label, style: AppTypography.metadata)]);
 }

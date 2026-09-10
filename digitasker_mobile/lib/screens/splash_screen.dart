@@ -3,12 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../widgets/brand_logo.dart';
 import 'auth/onboarding_carousel_screen.dart';
 import 'user/tasker_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
-
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -17,70 +17,32 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    _boot();
   }
 
-  Future<void> _checkAuth() async {
+  Future<void> _boot() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    final isAuthenticated = await auth.initAuth();
-
+    bool loggedIn = false;
+    try { loggedIn = await auth.initAuth(); } catch (_) {}
+    await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
-
-    if (isAuthenticated) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const TaskerHomeScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OnboardingCarouselScreen()),
-      );
-    }
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => loggedIn ? const TaskerHomeScreen() : const OnboardingCarouselScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryBlue,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.task_alt_rounded,
-                size: 64,
-                color: AppColors.primaryBlue,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'DIGILITES STUDIO',
-              style: TextStyle(
-                fontFamily: 'Manrope',
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Real Tasks. Real Insights. Real Rewards.',
-              style: AppTypography.metadata.copyWith(color: Colors.white70),
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ],
-        ),
+      body: Container(
+        decoration: const BoxDecoration(gradient: LinearGradient(colors: [Colors.white, Color(0xFFF0F7FF)], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+        child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: AppColors.primaryBlue.withOpacity(.10), blurRadius: 28, offset: const Offset(0, 10))]), child: const BrandLogo(width: 118, height: 74)),
+          const SizedBox(height: 18),
+          Text('DigiLites Studio', style: AppTypography.screenTitle),
+          const SizedBox(height: 5),
+          Text('Real Tasks. Real Insights. Real Rewards.', style: AppTypography.metadata.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 28),
+          const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.3, color: AppColors.primaryBlue)),
+        ])),
       ),
     );
   }

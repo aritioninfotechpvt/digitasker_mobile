@@ -1,207 +1,151 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
-import '../../widgets/primary_button.dart';
+import '../../widgets/brand_logo.dart';
 import 'login_screen.dart';
 import 'multi_step_register_screen.dart';
 
 class OnboardingCarouselScreen extends StatefulWidget {
   const OnboardingCarouselScreen({super.key});
-
   @override
   State<OnboardingCarouselScreen> createState() => _OnboardingCarouselScreenState();
 }
 
 class _OnboardingCarouselScreenState extends State<OnboardingCarouselScreen> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+  final PageController controller = PageController();
+  int page = 0;
 
-  final List<Map<String, dynamic>> _slides = [
-    {
-      'title1': 'Real Tasks.\n',
-      'title2': 'Real Rewards.',
-      'subtitle': 'Discover tasks, mystery audits and rewards around you.',
-      'icon': Icons.task_alt_rounded,
-      'color': AppColors.primaryBlue,
-    },
-    {
-      'title1': 'Explore ',
-      'title2': 'Nearby.',
-      'subtitle': 'Complete store audits, surveys, shopping and research tasks.',
-      'icon': Icons.travel_explore_rounded,
-      'color': AppColors.purple,
-    },
-    {
-      'title1': 'Complete & ',
-      'title2': 'Earn.',
-      'subtitle': 'Submit verified work and receive secure instant payments.',
-      'icon': Icons.account_balance_wallet_rounded,
-      'color': AppColors.successGreen,
-    },
+  final slides = const [
+    ('Real Tasks. Real Insights.', 'Real Rewards.', 'Explore, perform and earn with trusted brands around you.'),
+    ('Opportunities Around You.', 'Flexible Work.', 'Find store audits, surveys, product checks and shopping tasks nearby or online.'),
+    ('Complete Verified Tasks.', 'Get Rewarded.', 'Submit evidence, track approvals and withdraw earnings securely.'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.appBackground,
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontalPadding),
-          child: Column(
-            children: [
-              // Top Bar with Skip Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 14, 14, 0),
+              child: Row(
                 children: [
-                  const Text(
-                    'DIGILITES STUDIO',
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      color: AppColors.darkNavy,
-                      letterSpacing: 1,
+                  const BrandLogo(width: 86, height: 54),
+                  const Spacer(),
+                  if (page != slides.length - 1)
+                    TextButton(
+                      onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+                      child: const Text('Skip'),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: AppColors.secondaryText,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                 ],
               ),
-
-              // PageView Carousel
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: (idx) => setState(() => _currentPage = idx),
-                  itemCount: _slides.length,
-                  itemBuilder: (ctx, i) {
-                    final slide = _slides[i];
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            Expanded(
+              child: PageView.builder(
+                controller: controller,
+                itemCount: slides.length,
+                onPageChanged: (i) => setState(() => page = i),
+                itemBuilder: (_, i) {
+                  final s = slides[i];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            color: (slide['color'] as Color).withOpacity(0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            slide['icon'] as IconData,
-                            size: 70,
-                            color: slide['color'] as Color,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            style: AppTypography.heroTitle,
+                        const SizedBox(height: 12),
+                        Text(s.$1, style: AppTypography.heroTitle.copyWith(fontSize: 29)),
+                        Text(s.$2, style: AppTypography.heroTitle.copyWith(fontSize: 29, color: AppColors.primaryBlue)),
+                        const SizedBox(height: 10),
+                        Text(s.$3, style: AppTypography.body.copyWith(fontSize: 14.5)),
+                        const SizedBox(height: 18),
+                        Expanded(
+                          child: Stack(
+                            clipBehavior: Clip.none,
                             children: [
-                              TextSpan(text: slide['title1'] as String),
-                              TextSpan(
-                                text: slide['title2'] as String,
-                                style: TextStyle(color: slide['color'] as Color),
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [AppColors.surfaceBlue, Colors.white, AppColors.blueChipBg.withOpacity(.35)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(32),
+                                  ),
+                                ),
                               ),
+                              Positioned(right: -4, bottom: 0, top: 12, child: Image.asset('assets/ui/hero_person.png', fit: BoxFit.contain)),
+                              Positioned(left: 12, top: 38, child: _featurePill(Icons.shopping_bag_rounded, 'Shop & Review', AppColors.primaryBlue, AppColors.blueChipBg)),
+                              Positioned(left: 12, top: 100, child: _featurePill(Icons.storefront_rounded, 'Store Audit', AppColors.successGreen, AppColors.greenChipBg)),
+                              Positioned(left: 12, top: 162, child: _featurePill(Icons.quiz_rounded, 'Take Survey', AppColors.orange, AppColors.orangeChipBg)),
+                              Positioned(left: 12, top: 224, child: _featurePill(Icons.card_giftcard_rounded, 'Earn Rewards', AppColors.purple, AppColors.purpleChipBg)),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          child: Text(
-                            slide['subtitle'] as String,
-                            textAlign: TextAlign.center,
-                            style: AppTypography.body,
-                          ),
-                        ),
                       ],
-                    );
-                  },
-                ),
-              ),
-
-              // Dot Indicators
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _slides.length,
-                  (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: _currentPage == index ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? AppColors.primaryBlue
-                          : AppColors.borderColor,
-                      borderRadius: BorderRadius.circular(4),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // CTA Button
-              PrimaryButton(
-                label: _currentPage == _slides.length - 1 ? 'Get Started' : 'Next →',
-                onPressed: () {
-                  if (_currentPage < _slides.length - 1) {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  } else {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MultiStepRegisterScreen()),
-                    );
-                  }
+                  );
                 },
               ),
-              const SizedBox(height: 16),
-
-              // Login Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 22),
+              child: Column(
                 children: [
-                  Text('Already have an account? ', style: AppTypography.metadata),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryBlue,
-                      ),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (page < slides.length - 1) {
+                          controller.nextPage(duration: const Duration(milliseconds: 280), curve: Curves.easeOutCubic);
+                        } else {
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MultiStepRegisterScreen()));
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17))),
+                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text(page == slides.length - 1 ? 'Create Free Account' : 'Get Started'), const SizedBox(width: 8), const Icon(Icons.arrow_forward_rounded, size: 19)]),
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(slides.length, (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: i == page ? 18 : 6,
+                      height: 6,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(color: i == page ? AppColors.primaryBlue : const Color(0xFFD9E3F1), borderRadius: BorderRadius.circular(10)),
+                    )),
+                  ),
+                  const SizedBox(height: 13),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text('Already have an account? ', style: AppTypography.metadata),
+                    GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+                      child: Text('Login', style: AppTypography.metadata.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w800)),
+                    ),
+                  ]),
                 ],
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _featurePill(IconData icon, String text, Color color, Color bg) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(9, 8, 13, 8),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13), boxShadow: [BoxShadow(color: AppColors.darkNavy.withOpacity(.09), blurRadius: 18, offset: const Offset(0, 6))]),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 30, height: 30, decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(9)), child: Icon(icon, color: color, size: 17)),
+        const SizedBox(width: 8),
+        Text(text, style: AppTypography.cardTitle.copyWith(fontSize: 12.5)),
+      ]),
     );
   }
 }

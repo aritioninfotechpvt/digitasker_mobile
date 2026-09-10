@@ -1,163 +1,61 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
-import 'animated_press.dart';
-import 'status_chip.dart';
 
 class TaskCard extends StatefulWidget {
   final TaskModel task;
   final VoidCallback onTap;
-
-  const TaskCard({
-    super.key,
-    required this.task,
-    required this.onTap,
-  });
-
+  const TaskCard({super.key, required this.task, required this.onTap});
   @override
   State<TaskCard> createState() => _TaskCardState();
 }
 
 class _TaskCardState extends State<TaskCard> {
-  bool _isFavorite = false;
+  bool fav = false;
 
   @override
   Widget build(BuildContext context) {
-    final task = widget.task;
-
-    return AnimatedPress(
+    final t = widget.task;
+    return InkWell(
       onTap: widget.onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-          border: Border.all(color: AppColors.borderColor, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.cardPadding),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Store Photography Thumbnail (80 x 80px)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    color: const Color(0xFFEFF6FF),
-                    child: task.imageUrl.isNotEmpty
-                        ? Image.network(
-                            task.imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.storefront_rounded,
-                              size: 40,
-                              color: AppColors.primaryBlue,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.storefront_rounded,
-                            size: 40,
-                            color: AppColors.primaryBlue,
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-
-                // Details Column
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              task.title,
-                              style: AppTypography.cardTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() => _isFavorite = !_isFavorite);
-                            },
-                            child: Icon(
-                              _isFavorite
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-                              size: 20,
-                              color: _isFavorite
-                                  ? AppColors.errorRed
-                                  : AppColors.secondaryText,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        task.storeName,
-                        style: AppTypography.metadata,
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Location & Reward Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.location_on_rounded,
-                                size: 14,
-                                color: AppColors.primaryBlue,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                task.distance,
-                                style: AppTypography.metadata.copyWith(
-                                  color: AppColors.darkNavy,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            '₹${task.reward.toStringAsFixed(0)}',
-                            style: AppTypography.money,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Status Chips
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: task.tags.map((tag) => StatusChip(status: tag)).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderColor), boxShadow: [BoxShadow(color: AppColors.darkNavy.withOpacity(.03), blurRadius: 10, offset: const Offset(0, 4))]),
+        child: Row(children: [
+          ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset(_assetFor(t), width: 84, height: 78, fit: BoxFit.cover)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [Expanded(child: Text(t.title, style: AppTypography.cardTitle)), GestureDetector(onTap: () => setState(() => fav = !fav), child: Icon(fav ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: fav ? AppColors.errorRed : AppColors.darkNavy, size: 20))]),
+            const SizedBox(height: 1),
+            Text(t.storeName, style: AppTypography.metadata),
+            const SizedBox(height: 5),
+            Row(children: [const Icon(Icons.location_on_outlined, size: 13, color: AppColors.secondaryText), const SizedBox(width: 2), Text(t.distance, style: AppTypography.metadata), const Spacer(), Text('₹${t.reward.toStringAsFixed(0)}', style: AppTypography.money)]),
+            const SizedBox(height: 6),
+            Wrap(spacing: 6, children: t.tags.take(2).map((tag) => Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: _tagBg(tag), borderRadius: BorderRadius.circular(10)), child: Text(tag, style: AppTypography.metadata.copyWith(fontSize: 9.5, color: _tagFg(tag), fontWeight: FontWeight.w700)))).toList()),
+          ])),
+        ]),
       ),
     );
+  }
+
+  String _assetFor(TaskModel task) {
+    if (task.category.contains('Product')) return 'assets/ui/product_pharmacy.png';
+    if (task.category.contains('Restaurant')) return 'assets/ui/restaurant.png';
+    if (task.category.contains('Survey')) return 'assets/ui/survey.png';
+    return 'assets/ui/store_dmart.png';
+  }
+
+  Color _tagBg(String tag) {
+    if (tag == 'New' || tag == 'Quick') return AppColors.blueChipBg;
+    if (tag == 'Easy' || tag == 'On-site') return AppColors.greenChipBg;
+    return AppColors.purpleChipBg;
+  }
+  Color _tagFg(String tag) {
+    if (tag == 'New' || tag == 'Quick') return AppColors.primaryBlue;
+    if (tag == 'Easy' || tag == 'On-site') return AppColors.successGreen;
+    return AppColors.purple;
   }
 }

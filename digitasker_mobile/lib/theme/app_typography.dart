@@ -3,62 +3,53 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTypography {
-  // Hero / Onboarding Title (Manrope 800, 30-36px, 1.08 height)
   static TextStyle heroTitle = GoogleFonts.manrope(
     fontSize: 32,
     fontWeight: FontWeight.w800,
     height: 1.08,
-    letterSpacing: -0.5,
+    letterSpacing: -1.0,
     color: AppColors.darkNavy,
   );
-
-  // Screen Title (Manrope 700-800, 24-28px)
   static TextStyle screenTitle = GoogleFonts.manrope(
-    fontSize: 26,
+    fontSize: 25,
     fontWeight: FontWeight.w800,
+    height: 1.15,
+    letterSpacing: -0.6,
     color: AppColors.darkNavy,
   );
-
-  // Section Title (Manrope 700, 18-22px)
   static TextStyle sectionTitle = GoogleFonts.manrope(
-    fontSize: 20,
-    fontWeight: FontWeight.w700,
+    fontSize: 19,
+    fontWeight: FontWeight.w800,
+    height: 1.2,
+    letterSpacing: -0.35,
     color: AppColors.darkNavy,
   );
-
-  // Card Title (Manrope 700, 16-18px)
   static TextStyle cardTitle = GoogleFonts.manrope(
-    fontSize: 16,
+    fontSize: 15.5,
     fontWeight: FontWeight.w700,
+    height: 1.25,
     color: AppColors.darkNavy,
   );
-
-  // Body Text (Inter 400, 14-16px, 1.45 height)
   static TextStyle body = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    height: 1.45,
+    height: 1.5,
     color: AppColors.bodyText,
   );
-
-  // Secondary / Metadata (Inter 400-500, 12-13px)
   static TextStyle metadata = GoogleFonts.inter(
     fontSize: 12,
     fontWeight: FontWeight.w500,
+    height: 1.3,
     color: AppColors.secondaryText,
   );
-
-  // Button Label (Inter 600-700, 15-16px)
   static TextStyle button = GoogleFonts.inter(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
     color: Colors.white,
   );
-
-  // Money / Reward Text (Inter 700, 18-24px)
   static TextStyle money = GoogleFonts.inter(
-    fontSize: 20,
-    fontWeight: FontWeight.w700,
+    fontSize: 19,
+    fontWeight: FontWeight.w800,
     color: AppColors.successGreen,
   );
 }

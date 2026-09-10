@@ -1,310 +1,66 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_typography.dart';
 
-class WalletScreen extends StatefulWidget {
+class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
 
   @override
-  State<WalletScreen> createState() => _WalletScreenState();
-}
-
-class _WalletScreenState extends State<WalletScreen> {
-  final List<Map<String, dynamic>> _transactions = [
-    {
-      'title': 'Task Payment',
-      'subtitle': 'Store Audit - DMart',
-      'date': '09 Sep 2026',
-      'amount': '+₹250',
-      'isCredit': true,
-    },
-    {
-      'title': 'Withdrawal',
-      'subtitle': 'UPI Transfer',
-      'date': '05 Sep 2026',
-      'amount': '-₹1,000',
-      'isCredit': false,
-    },
-    {
-      'title': 'Task Payment',
-      'subtitle': 'Restaurant Audit',
-      'date': '03 Sep 2026',
-      'amount': '+₹300',
-      'isCredit': true,
-    },
-    {
-      'title': 'Task Payment',
-      'subtitle': 'Survey Task',
-      'date': '01 Sep 2026',
-      'amount': '+₹100',
-      'isCredit': true,
-    },
-  ];
-
-  @override
   Widget build(BuildContext context) {
+    final tx = [
+      ('Task Payment', 'Store Audit - DMart', '+ ₹250', '09 Sep 2026', AppColors.successGreen, Icons.account_balance_wallet_rounded),
+      ('Withdrawal', 'UPI Transfer', '- ₹1,000', '05 Sep 2026', AppColors.orange, Icons.south_west_rounded),
+      ('Task Payment', 'Restaurant Audit', '+ ₹300', '03 Sep 2026', AppColors.successGreen, Icons.account_balance_wallet_rounded),
+      ('Task Payment', 'Survey Task', '+ ₹100', '01 Sep 2026', AppColors.successGreen, Icons.account_balance_wallet_rounded),
+    ];
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'My Wallet',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
-            onPressed: () {},
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('My Wallet'), actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.qr_code_scanner_rounded))]),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF1978FF), Color(0xFF005FEA)]),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [BoxShadow(color: AppColors.primaryBlue.withOpacity(.18), blurRadius: 18, offset: const Offset(0, 8))],
+            ),
+            child: Row(children: [
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Total Balance', style: AppTypography.metadata.copyWith(color: Colors.white.withOpacity(.9))),
+                const SizedBox(height: 4),
+                Text('₹1,250', style: AppTypography.screenTitle.copyWith(color: Colors.white, fontSize: 27)),
+              ])),
+              OutlinedButton(onPressed: () {}, style: OutlinedButton.styleFrom(backgroundColor: Colors.white, side: BorderSide.none, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))), child: const Text('Withdraw')),
+            ]),
           ),
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(child: _stat('₹3,850', 'Total Earned')),
+            Expanded(child: _stat('₹2,600', 'Withdrawn')),
+            Expanded(child: _stat('12', 'Tasks Completed')),
+          ]),
+          const SizedBox(height: 24),
+          Row(children: [Text('Recent Transactions', style: AppTypography.sectionTitle.copyWith(fontSize: 18)), const Spacer(), TextButton(onPressed: () {}, child: const Text('View All'))]),
+          const SizedBox(height: 2),
+          ...tx.map((e) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.borderColor))),
+            child: Row(children: [
+              Container(width: 40, height: 40, decoration: BoxDecoration(color: e.$5.withOpacity(.11), borderRadius: BorderRadius.circular(12)), child: Icon(e.$6, color: e.$5, size: 20)),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(e.$1, style: AppTypography.cardTitle.copyWith(fontSize: 13.5)), Text(e.$2, style: AppTypography.metadata)])),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(e.$3, style: AppTypography.cardTitle.copyWith(color: e.$3.startsWith('+') ? AppColors.successGreen : AppColors.errorRed, fontSize: 13.5)), const SizedBox(height: 2), Text(e.$4, style: AppTypography.metadata.copyWith(fontSize: 10.5))]),
+            ]),
+          )),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Blue Total Balance Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2563EB),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total Balance',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '₹1,250',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Withdrawal request initiated for ₹1,250'),
-                          backgroundColor: Color(0xFF10B981),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF2563EB),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Withdraw',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: Color(0xFF2563EB),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Stats Row (3 Columns)
-            Row(
-              children: [
-                _buildStatColumn('₹3,850', 'Total Earned'),
-                const SizedBox(width: 12),
-                _buildStatColumn('₹2,600', 'Withdrawn'),
-                const SizedBox(width: 12),
-                _buildStatColumn('12', 'Tasks Completed'),
-              ],
-            ),
-            const SizedBox(height: 28),
-
-            // Section Header: Recent Transactions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Recent Transactions',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: const Text(
-                    'View All',
-                    style: TextStyle(
-                      color: Color(0xFF2563EB),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Transaction Items List
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _transactions.length,
-              itemBuilder: (ctx, i) {
-                final tx = _transactions[i];
-                final isCredit = tx['isCredit'] as bool;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isCredit
-                              ? const Color(0xFFECFDF5)
-                              : const Color(0xFFFFF7ED),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isCredit
-                              ? Icons.account_balance_wallet_rounded
-                              : Icons.outbox_rounded,
-                          color: isCredit
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFF97316),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              tx['title'] as String,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              tx['subtitle'] as String,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            tx['amount'] as String,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: isCredit
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFF97316),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            tx['date'] as String,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildStatColumn(String value, String label) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _stat(String value, String label) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: Column(children: [Text(value, style: AppTypography.cardTitle.copyWith(fontSize: 16)), const SizedBox(height: 3), Text(label, textAlign: TextAlign.center, style: AppTypography.metadata.copyWith(fontSize: 10.5))]),
+  );
 }
