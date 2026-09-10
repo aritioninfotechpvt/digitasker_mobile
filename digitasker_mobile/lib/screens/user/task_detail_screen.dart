@@ -23,7 +23,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.bottom: 90),
+            padding: const EdgeInsets.only(bottom: 90),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

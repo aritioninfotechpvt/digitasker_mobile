@@ -48,7 +48,7 @@ class DigiLitesStudioApp extends StatelessWidget {
             foregroundColor: AppColors.darkNavy,
             systemOverlayStyle: SystemUiOverlayStyle.dark,
           ),
-          cardTheme: CardTheme(
+          cardTheme: CardThemeData(
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
