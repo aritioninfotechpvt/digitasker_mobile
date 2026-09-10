@@ -1,0 +1,29 @@
+# Node dependencies
+frontend/node_modules/
+frontend/dist/
+
+# Laravel dependencies & storage
+backend/vendor/
+backend/storage/*.key
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/testing/*
+backend/storage/framework/views/*
+backend/storage/logs/*.log
+backend/bootstrap/cache/*.php
+
+# Flutter build artifacts
+digitasker_mobile/.dart_tool/
+digitasker_mobile/.flutter-plugins
+digitasker_mobile/.flutter-plugins-dependencies
+digitasker_mobile/.packages
+digitasker_mobile/build/
+digitasker_mobile/.pub-cache/
+digitasker_mobile/.pub/
+
+# IDE & System
+.idea/
+.vscode/
+*.swp
+*.DS_Store
+Thumbs.db

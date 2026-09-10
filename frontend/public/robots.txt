@@ -1,0 +1,21 @@
+# Robots.txt for tasker.digilitesstudio.com
+User-agent: *
+Allow: /
+Allow: /how-it-works
+Allow: /for-auditors
+Allow: /for-brands
+Allow: /about
+Allow: /faq
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+
+# Block internal portal workspace paths from indexing
+Disallow: /admin/
+Disallow: /user/
+Disallow: /vendor/
+Disallow: /client/
+Disallow: /auth/
+
+# XML Sitemap URL
+Sitemap: https://tasker.digilitesstudio.com/sitemap.xml
