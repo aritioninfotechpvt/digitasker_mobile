@@ -33,7 +33,9 @@ class _TaskerHomeScreenState extends State<TaskerHomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.appBackground,
-      drawer: const AppSideDrawer(),
+      drawer: AppSideDrawer(
+        onTabSelected: (index) => setState(() => _selectedIndex = index),
+      ),
       body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: _BottomNav(
         selectedIndex: _selectedIndex,
