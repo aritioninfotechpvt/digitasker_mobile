@@ -349,18 +349,39 @@ class _HomeTabState extends State<_HomeTab> {
             ),
             child: TextField(
               textAlignVertical: TextAlignVertical.center,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (query) {
+                if (query.trim().isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FindTasksScreen(initialSearchQuery: query.trim()),
+                    ),
+                  );
+                }
+              },
               decoration: InputDecoration(
-                hintText: 'Search tasks, brands or locations',
-                hintStyle: AppTypography.metadata.copyWith(fontSize: 11.5),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF5F6F85), size: 21),
-                suffixIcon: Container(
-                  width: 38,
-                  margin: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF3FF),
-                    borderRadius: BorderRadius.circular(10),
+                hintText: 'Search tasks, brands or locations...',
+                hintStyle: AppTypography.metadata.copyWith(fontSize: 12, color: const Color(0xFF64748B)),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF475569), size: 21),
+                suffixIcon: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const FindTasksScreen(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 38,
+                    margin: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAF3FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.tune_rounded, color: AppColors.primaryBlue, size: 19),
                   ),
-                  child: const Icon(Icons.tune_rounded, color: AppColors.primaryBlue, size: 19),
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,

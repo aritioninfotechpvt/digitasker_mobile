@@ -27,6 +27,94 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _ifscController;
 
   bool _isEditing = false;
+  String? _selectedAvatarUrl;
+
+  void _showAvatarPickerModal(BuildContext context) {
+    final sampleAvatars = [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Change Profile Photo', style: AppTypography.screenTitle.copyWith(fontSize: 18)),
+                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFFEAF3FF), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.photo_camera_rounded, color: AppColors.primaryBlue),
+              ),
+              title: const Text('Take Photo with Camera', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Capture new photo for KYC verification', style: TextStyle(fontSize: 11)),
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() => _selectedAvatarUrl = sampleAvatars[0]);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Profile photo updated successfully!'), backgroundColor: AppColors.successGreen),
+                );
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFFE6F7F6), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.photo_library_rounded, color: Color(0xFF00B2A9)),
+              ),
+              title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Select image from device gallery', style: TextStyle(fontSize: 11)),
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() => _selectedAvatarUrl = sampleAvatars[1]);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Profile photo updated successfully!'), backgroundColor: AppColors.successGreen),
+                );
+              },
+            ),
+            const SizedBox(height: 14),
+            Text('Or Select Preset Avatar:', style: AppTypography.cardTitle.copyWith(fontSize: 13)),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: sampleAvatars.map((url) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() => _selectedAvatarUrl = url);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Preset avatar selected!'), backgroundColor: AppColors.successGreen),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundImage: NetworkImage(url),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -99,38 +187,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Row(
                 children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 36,
-                        backgroundColor: const Color(0xFFE2E8F0),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/ui/profile_avatar.png',
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Text(
-                              user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'R',
-                              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                  GestureDetector(
+                    onTap: () => _showAvatarPickerModal(context),
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 36,
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          child: ClipOval(
+                            child: _selectedAvatarUrl != null
+                                ? Image.network(
+                                    _selectedAvatarUrl!,
+                                    width: 72,
+                                    height: 72,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                      'assets/ui/profile_avatar.png',
+                                      width: 72,
+                                      height: 72,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Image.asset(
+                                    'assets/ui/profile_avatar.png',
+                                    width: 72,
+                                    height: 72,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Text(
+                                      user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'R',
+                                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
+                            child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 13),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primaryBlue,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 13),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(

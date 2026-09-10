@@ -95,6 +95,20 @@ class DigiLitesStudioApp extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
           ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.darkNavy,
+              textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
+              side: const BorderSide(color: AppColors.borderColor),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primaryBlue,
+              textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+          ),
         ),
         builder: (context, child) => MobileViewportWrapper(child: child ?? const SizedBox()),
         home: const SplashScreen(),

@@ -176,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.only(top: 7, bottom: 7),
                             ),
-                            onPressed: () {},
+                            onPressed: () => _showForgotPasswordModal(context),
                             child: Text(
                               'Forgot Password?',
                               style: AppTypography.metadata.copyWith(
@@ -389,6 +389,89 @@ class _LoginScreenState extends State<LoginScreen> {
               style: AppTypography.body.copyWith(
                 color: AppColors.darkNavy,
                 fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showForgotPasswordModal(BuildContext context) {
+    final resetController = TextEditingController(text: _email.text.trim());
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Reset Password',
+                  style: AppTypography.screenTitle.copyWith(fontSize: 20),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Enter your registered email address or mobile number to receive password reset instructions.',
+              style: AppTypography.body.copyWith(fontSize: 13, color: const Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 18),
+            _label('Email or Mobile Number'),
+            const SizedBox(height: 8),
+            _field(
+              controller: resetController,
+              hint: 'Enter your email or mobile',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (resetController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter your email or mobile number')),
+                    );
+                    return;
+                  }
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: AppColors.successGreen,
+                      content: Text(
+                        'Password reset instructions sent to ${resetController.text.trim()}',
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Send Reset Instructions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ),
             ),
           ],

@@ -10,7 +10,8 @@ import 'task_detail_screen.dart';
 
 class FindTasksScreen extends StatefulWidget {
   final String? initialCategory;
-  const FindTasksScreen({super.key, this.initialCategory});
+  final String? initialSearchQuery;
+  const FindTasksScreen({super.key, this.initialCategory, this.initialSearchQuery});
 
   @override
   State<FindTasksScreen> createState() => _FindTasksScreenState();
@@ -18,6 +19,7 @@ class FindTasksScreen extends StatefulWidget {
 
 class _FindTasksScreenState extends State<FindTasksScreen> {
   late String _selectedCategory;
+  late TextEditingController _searchController;
   bool _isMatchedFilter = false;
   String _searchQuery = '';
   String _sortBy = 'Reward (High to Low)';
@@ -36,11 +38,25 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory ?? 'All';
+    _searchQuery = widget.initialSearchQuery ?? '';
+    _searchController = TextEditingController(text: _searchQuery);
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim();
+      });
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final taskProvider = Provider.of<TaskProvider>(context, listen: false);
       taskProvider.fetchUserTasks();
       taskProvider.fetchFeaturedTasks();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -92,6 +108,46 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
       ),
       body: CustomScrollView(
         slivers: [
+          // Live Search Bar
+          SliverToBoxAdapter(
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  textAlignVertical: TextAlignVertical.center,
+                  style: AppTypography.body.copyWith(color: AppColors.darkNavy, fontWeight: FontWeight.w600),
+                  decoration: InputDecoration(
+                    hintText: 'Search by task, brand, category or location...',
+                    hintStyle: AppTypography.metadata.copyWith(fontSize: 12.5, color: const Color(0xFF64748B)),
+                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF475569), size: 22),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 18, color: Color(0xFF64748B)),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           // QC Revision Requested Alert Banner
           SliverToBoxAdapter(child: _buildQCRevisionBanner(context)),
 
