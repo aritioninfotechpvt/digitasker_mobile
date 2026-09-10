@@ -25,21 +25,31 @@ class AuthProvider with ChangeNotifier {
       final token = await _storage.getToken();
       if (token != null) {
         final data = await _api.get('/auth/me');
-        if (data != null && data['user'] != null) {
-          _user = UserModel.fromJson(data['user']);
-          await _storage.saveUserData(jsonEncode(_user!.toJson()));
-          _isLoading = false;
-          notifyListeners();
-          return true;
+        if (data != null) {
+          final userJson = data is Map<String, dynamic>
+              ? (data['user'] is Map<String, dynamic> ? data['user'] : data)
+              : null;
+          if (userJson != null && userJson.containsKey('id')) {
+            _user = UserModel.fromJson(userJson);
+            await _storage.saveUserData(jsonEncode(_user!.toJson()));
+            _isLoading = false;
+            notifyListeners();
+            return true;
+          }
         }
       }
     } catch (_) {
-      await _storage.clearAll();
+      final savedUser = await _storage.getUserData();
+      if (savedUser != null) {
+        try {
+          _user = UserModel.fromJson(jsonDecode(savedUser));
+        } catch (_) {}
+      }
     }
 
     _isLoading = false;
     notifyListeners();
-    return false;
+    return _user != null;
   }
 
   Future<bool> login(String email, String password) async {
@@ -56,7 +66,8 @@ class AuthProvider with ChangeNotifier {
       final token = data['access_token'] ?? data['token'];
       if (token != null) {
         await _storage.saveToken(token.toString());
-        _user = UserModel.fromJson(data['user']);
+        final userMap = data['user'] is Map<String, dynamic> ? data['user'] : data;
+        _user = UserModel.fromJson(userMap);
         await _storage.saveUserData(jsonEncode(_user!.toJson()));
         _isLoading = false;
         notifyListeners();
@@ -94,7 +105,8 @@ class AuthProvider with ChangeNotifier {
       final token = data['access_token'] ?? data['token'];
       if (token != null) {
         await _storage.saveToken(token.toString());
-        _user = UserModel.fromJson(data['user']);
+        final userMap = data['user'] is Map<String, dynamic> ? data['user'] : data;
+        _user = UserModel.fromJson(userMap);
         await _storage.saveUserData(jsonEncode(_user!.toJson()));
         _isLoading = false;
         notifyListeners();
