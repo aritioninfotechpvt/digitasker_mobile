@@ -244,11 +244,29 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     label: 'Continue with Google',
+                    onTap: () async {
+                      final success = await auth.loginWithSocial('google');
+                      if (success && context.mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TaskerHomeScreen()),
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: 11),
                   _socialButton(
                     icon: const Icon(Icons.apple_rounded, color: Colors.black, size: 23),
                     label: 'Continue with Apple',
+                    onTap: () async {
+                      final success = await auth.loginWithSocial('apple');
+                      if (success && context.mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TaskerHomeScreen()),
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: 26),
                   Row(
@@ -346,12 +364,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _socialButton({required Widget icon, required String label}) {
+  Widget _socialButton({required Widget icon, required String label, required VoidCallback onTap}) {
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: OutlinedButton(
-        onPressed: () {},
+        onPressed: onTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: AppColors.darkNavy,

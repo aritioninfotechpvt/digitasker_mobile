@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../data/demo_data.dart';
+import '../../providers/task_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/task_card.dart';
@@ -16,12 +18,27 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
   final pills = ['All', 'Nearby', 'High Reward', 'Surveys'];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      taskProvider.fetchUserTasks();
+      taskProvider.fetchFeaturedTasks();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final tasks = DemoData.tasks.where((t) {
+    final taskProvider = Provider.of<TaskProvider>(context);
+    final rawTasks = taskProvider.availableTasks.isNotEmpty
+        ? taskProvider.availableTasks
+        : (taskProvider.featuredTasks.isNotEmpty ? taskProvider.featuredTasks : DemoData.tasks);
+
+    final tasks = rawTasks.where((t) {
       if (selected == 'All') return true;
       if (selected == 'Nearby') return t.locationType == 'On-site';
       if (selected == 'High Reward') return t.reward >= 250;
-      return t.category == 'Surveys';
+      return t.category == 'Surveys' || t.title.contains('Survey');
     }).toList();
 
     return Scaffold(
@@ -56,11 +73,19 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-            itemCount: tasks.length,
-            itemBuilder: (_, i) => TaskCard(task: tasks[i], onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskDetailScreen(task: tasks[i])))),
-          ),
+          child: taskProvider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                  itemCount: tasks.length,
+                  itemBuilder: (_, i) => TaskCard(
+                    task: tasks[i],
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => TaskDetailScreen(task: tasks[i])),
+                    ),
+                  ),
+                ),
         ),
       ]),
     );

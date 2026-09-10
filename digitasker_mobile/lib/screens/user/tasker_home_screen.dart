@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
 import '../../data/demo_data.dart';
 import '../../models/task_model.dart';
+import '../../providers/task_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/app_drawer.dart';
@@ -113,11 +114,31 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-class _HomeTab extends StatelessWidget {
+class _HomeTab extends StatefulWidget {
   const _HomeTab();
 
   @override
+  State<_HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      taskProvider.fetchFeaturedTasks();
+      taskProvider.fetchUserTasks();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final taskProvider = Provider.of<TaskProvider>(context);
+    final displayTasks = taskProvider.availableTasks.isNotEmpty 
+        ? taskProvider.availableTasks 
+        : (taskProvider.featuredTasks.isNotEmpty ? taskProvider.featuredTasks : DemoData.tasks);
+
     return SafeArea(
       bottom: false,
       child: CustomScrollView(
@@ -142,7 +163,7 @@ class _HomeTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 9),
-                ...DemoData.tasks.take(3).map(
+                ...displayTasks.take(4).map(
                       (task) => Padding(
                         padding: const EdgeInsets.only(bottom: 11),
                         child: _nearbyTask(context, task),

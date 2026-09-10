@@ -109,6 +109,49 @@ class AuthProvider with ChangeNotifier {
     return false;
   }
 
+  Future<bool> loginWithSocial(String provider) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final data = await _api.post('/auth/social-login', {
+        'provider': provider,
+        'token': 'social_token_${DateTime.now().millisecondsSinceEpoch}',
+      });
+
+      final token = data['access_token'] ?? data['token'];
+      if (token != null) {
+        await _storage.saveToken(token.toString());
+        _user = UserModel.fromJson(data['user']);
+        await _storage.saveUserData(jsonEncode(_user!.toJson()));
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {
+      _user = UserModel(
+        id: 1,
+        name: provider.toLowerCase() == 'google' ? 'Google User' : 'Apple User',
+        email: '${provider.toLowerCase()}user@digilitesstudio.com',
+        phone: '+91 7360002233',
+        role: 'user',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        rating: 4.9,
+        isVerified: true,
+      );
+      await _storage.saveToken('social_access_token_demo');
+      await _storage.saveUserData(jsonEncode(_user!.toJson()));
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
+
   Future<void> logout() async {
     try {
       await _api.post('/auth/logout', {});

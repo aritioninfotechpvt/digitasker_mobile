@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/demo_data.dart';
 import '../models/task_model.dart';
 import '../services/api_service.dart';
 
@@ -19,10 +20,18 @@ class TaskProvider with ChangeNotifier {
     try {
       final res = await _api.get('/public/featured-tasks');
       final list = (res['tasks'] ?? res['data'] ?? []) as List;
-      _featuredTasks = list.map((item) => TaskModel.fromJson(item)).toList();
+      if (list.isNotEmpty) {
+        _featuredTasks = list.map((item) => TaskModel.fromJson(item)).toList();
+      } else {
+        _featuredTasks = DemoData.tasks;
+      }
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
+      if (_featuredTasks.isEmpty) {
+        _featuredTasks = DemoData.tasks;
+      }
+      notifyListeners();
     }
   }
 
@@ -33,11 +42,24 @@ class TaskProvider with ChangeNotifier {
     try {
       final res = await _api.get('/user/find-tasks');
       final list = (res['tasks'] ?? res['data'] ?? []) as List;
-      _availableTasks = list.map((item) => TaskModel.fromJson(item)).toList();
+      if (list.isNotEmpty) {
+        _availableTasks = list.map((item) => TaskModel.fromJson(item)).toList();
+      } else {
+        // Fallback to public featured tasks from API
+        await fetchFeaturedTasks();
+        _availableTasks = _featuredTasks;
+      }
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
+      try {
+        final res = await _api.get('/public/featured-tasks');
+        final list = (res['tasks'] ?? res['data'] ?? []) as List;
+        _availableTasks = list.map((item) => TaskModel.fromJson(item)).toList();
+      } catch (_) {
+        _availableTasks = DemoData.tasks;
+      }
       _isLoading = false;
       notifyListeners();
     }
