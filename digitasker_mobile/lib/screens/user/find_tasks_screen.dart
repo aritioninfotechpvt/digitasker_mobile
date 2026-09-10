@@ -9,14 +9,15 @@ import 'multi_step_task_completion_screen.dart';
 import 'task_detail_screen.dart';
 
 class FindTasksScreen extends StatefulWidget {
-  const FindTasksScreen({super.key});
+  final String? initialCategory;
+  const FindTasksScreen({super.key, this.initialCategory});
 
   @override
   State<FindTasksScreen> createState() => _FindTasksScreenState();
 }
 
 class _FindTasksScreenState extends State<FindTasksScreen> {
-  String _selectedCategory = 'All';
+  late String _selectedCategory;
   bool _isMatchedFilter = false;
   String _searchQuery = '';
   String _sortBy = 'Reward (High to Low)';
@@ -34,6 +35,7 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedCategory = widget.initialCategory ?? 'All';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final taskProvider = Provider.of<TaskProvider>(context, listen: false);
       taskProvider.fetchUserTasks();

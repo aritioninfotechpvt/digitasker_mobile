@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../data/demo_data.dart';
 import '../../models/task_model.dart';
@@ -24,6 +26,62 @@ class TaskerHomeScreen extends StatefulWidget {
 
 class _TaskerHomeScreenState extends State<TaskerHomeScreen> {
   int _selectedIndex = 0;
+  DateTime? _lastBackPressTime;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      taskProvider.fetchFeaturedTasks();
+      taskProvider.fetchUserTasks();
+      
+      // Real-time admin task creation listener & polling
+      taskProvider.startPollingTasks(onNewTaskAlert: (newTask) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFF0F172A),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
+              content: Row(
+                children: [
+                  const Icon(Icons.new_releases_rounded, color: Color(0xFF38BDF8), size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '🔔 New Task Added by Admin!',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                        ),
+                        Text(
+                          '${newTask.title} - Earn ₹${newTask.reward.toStringAsFixed(0)}',
+                          style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 11.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              action: SnackBarAction(
+                label: 'VIEW',
+                textColor: const Color(0xFF38BDF8),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => TaskDetailScreen(task: newTask)),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,21 +96,43 @@ class _TaskerHomeScreenState extends State<TaskerHomeScreen> {
       const ProfileScreen(),
     ];
 
-    return Scaffold(
-      backgroundColor: AppColors.appBackground,
-      drawer: AppSideDrawer(
-        onTabSelected: (index) => setState(() => _selectedIndex = index),
-      ),
-      body: IndexedStack(index: _selectedIndex, children: pages),
-      bottomNavigationBar: _BottomNav(
-        selectedIndex: _selectedIndex > 4 ? 4 : _selectedIndex,
-        onChanged: (index) {
-          int mappedIndex = index;
-          if (index == 2) mappedIndex = 2; // My Tasks
-          if (index == 3) mappedIndex = 5; // Wallet
-          if (index == 4) mappedIndex = 7; // Profile
-          setState(() => _selectedIndex = mappedIndex);
-        },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (_selectedIndex != 0) {
+          setState(() => _selectedIndex = 0);
+          return;
+        }
+        final now = DateTime.now();
+        if (_lastBackPressTime == null || now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Press back again to exit DigiLites Studio'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+        SystemNavigator.pop();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.appBackground,
+        drawer: AppSideDrawer(
+          onTabSelected: (index) => setState(() => _selectedIndex = index),
+        ),
+        body: IndexedStack(index: _selectedIndex, children: pages),
+        bottomNavigationBar: _BottomNav(
+          selectedIndex: _selectedIndex > 4 ? 4 : _selectedIndex,
+          onChanged: (index) {
+            int mappedIndex = index;
+            if (index == 2) mappedIndex = 2; // My Tasks
+            if (index == 3) mappedIndex = 5; // Wallet
+            if (index == 4) mappedIndex = 7; // Profile
+            setState(() => _selectedIndex = mappedIndex);
+          },
+        ),
       ),
     );
   }
@@ -135,16 +215,6 @@ class _HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<_HomeTab> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-      taskProvider.fetchFeaturedTasks();
-      taskProvider.fetchUserTasks();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
     final displayTasks = taskProvider.availableTasks.isNotEmpty 
@@ -161,7 +231,7 @@ class _HomeTabState extends State<_HomeTab> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _hero(context),
+                const _HeroImageSlider(),
                 const SizedBox(height: 18),
                 _categoryGrid(context),
                 const SizedBox(height: 21),
@@ -305,6 +375,9 @@ class _HomeTabState extends State<_HomeTab> {
   }
 
   Widget _notificationButton(BuildContext context) {
+    final taskProvider = Provider.of<TaskProvider>(context);
+    final hasUnread = taskProvider.hasUnreadNotifications;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -324,203 +397,106 @@ class _HomeTabState extends State<_HomeTab> {
             child: const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
           ),
         ),
-        Positioned(
-          right: 6,
-          top: 5,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF4D4F),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.4),
+        if (hasUnread)
+          Positioned(
+            right: 6,
+            top: 5,
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF4D4F),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _hero(BuildContext context) {
-    return Container(
-      height: 158,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0D5AAA), Color(0xFF0D83DF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(.18),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -24,
-              top: -22,
-              child: Container(
-                width: 155,
-                height: 155,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(.08),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Image.asset(
-                'assets/ui/home_banner_person_only.png',
-                width: 120,
-                height: 150,
-                fit: BoxFit.cover,
-                alignment: Alignment.centerRight,
-              ),
-            ),
-            Positioned(
-              left: 17,
-              top: 17,
-              right: 112,
-              bottom: 14,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'TASKS NEAR YOU',
-                      style: AppTypography.metadata.copyWith(
-                        color: Colors.white,
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: .5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  Text(
-                    'Small Tasks.\nBig Rewards!',
-                    style: AppTypography.screenTitle.copyWith(
-                      color: Colors.white,
-                      fontSize: 23,
-                      height: 1.02,
-                      letterSpacing: -.7,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Complete verified tasks and earn real cash.',
-                    maxLines: 2,
-                    style: AppTypography.metadata.copyWith(
-                      color: Colors.white.withOpacity(.9),
-                      fontSize: 10.5,
-                      height: 1.25,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    height: 34,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const FindTasksScreen()),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.darkNavy,
-                        padding: const EdgeInsets.symmetric(horizontal: 13),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('View Tasks', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
-                          SizedBox(width: 5),
-                          Icon(Icons.arrow_forward_rounded, size: 15),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _categoryGrid(BuildContext context) {
-    final items = [
-      (Icons.storefront_rounded, 'Store Audit', const Color(0xFF1378F2), const Color(0xFFE8F3FF)),
-      (Icons.shopping_bag_rounded, 'Shopping\nTasks', const Color(0xFFEF476F), const Color(0xFFFFEBF0)),
-      (Icons.location_on_rounded, 'Surveys', const Color(0xFFFF9800), const Color(0xFFFFF1DF)),
-      (Icons.description_rounded, 'Product\nCheck', const Color(0xFF10B981), const Color(0xFFE7F9F1)),
-      (Icons.camera_alt_rounded, 'Photo Tasks', const Color(0xFFFF3D57), const Color(0xFFFFEBEE)),
-      (Icons.travel_explore_rounded, 'Visit & Review', const Color(0xFF05A6D8), const Color(0xFFE6F8FE)),
-      (Icons.star_rounded, 'Special\nCampaigns', const Color(0xFFFF8A00), const Color(0xFFFFF1DF)),
-      (Icons.more_horiz_rounded, 'More', const Color(0xFF132A4A), const Color(0xFFF0F3F7)),
+    final categories = [
+      (Icons.search_rounded, 'Mystery Audit', AppColors.primaryBlue, const Color(0xFFEBF3FE)),
+      (Icons.share_rounded, 'Social Media', const Color(0xFF00B2A9), const Color(0xFFE6F7F6)),
+      (Icons.shopping_cart_rounded, 'E-commerce', AppColors.orange, const Color(0xFFFFF4EB)),
+      (Icons.star_rounded, 'Google Rating', const Color(0xFF722ED1), const Color(0xFFF9F0FF)),
+      (Icons.movie_rounded, 'IMDb & Movie', const Color(0xFFEB2F96), const Color(0xFFFFF0F6)),
+      (Icons.poll_rounded, 'Survey', const Color(0xFF13C2C2), const Color(0xFFE6FFFB)),
     ];
 
-    return GridView.builder(
-      itemCount: items.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisExtent: 84,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemBuilder: (_, index) {
-        final item = items[index];
-        return InkWell(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const FindTasksScreen()),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Popular Categories',
+          style: AppTypography.cardTitle.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.05,
           ),
-          borderRadius: BorderRadius.circular(16),
-          child: Column(
-            children: [
-              Container(
-                width: 47,
-                height: 47,
+          itemCount: categories.length,
+          itemBuilder: (ctx, i) {
+            final item = categories[i];
+            return InkWell(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FindTasksScreen(initialCategory: item.$2),
+                ),
+              ),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: item.$4,
-                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.borderColor),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.darkNavy.withOpacity(.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Icon(item.$1, color: item.$3, size: 22),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                item.$2,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                style: AppTypography.metadata.copyWith(
-                  color: AppColors.darkNavy,
-                  fontSize: 9.6,
-                  height: 1.15,
-                  fontWeight: FontWeight.w700,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: item.$4,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(item.$1, color: item.$3, size: 21),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.$2,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.metadata.copyWith(
+                        color: AppColors.darkNavy,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -531,16 +507,14 @@ class _HomeTabState extends State<_HomeTab> {
     required VoidCallback onTap,
   }) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(
-          child: Text(
-            title,
-            style: AppTypography.sectionTitle.copyWith(fontSize: 20),
-          ),
+        Text(
+          title,
+          style: AppTypography.cardTitle.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        TextButton(
-          onPressed: onTap,
-          style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
+        GestureDetector(
+          onTap: onTap,
           child: Text(
             action,
             style: AppTypography.metadata.copyWith(
@@ -559,67 +533,100 @@ class _HomeTabState extends State<_HomeTab> {
         context,
         MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
       ),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.borderColor),
           boxShadow: [
             BoxShadow(
-              color: AppColors.darkNavy.withOpacity(.035),
-              blurRadius: 14,
+              color: AppColors.darkNavy.withOpacity(.04),
+              blurRadius: 12,
               offset: const Offset(0, 5),
             ),
           ],
         ),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(13),
-              child: Image.asset(
-                _assetFor(task),
-                width: 74,
-                height: 67,
-                fit: BoxFit.cover,
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F5FF),
+                borderRadius: BorderRadius.circular(14),
               ),
+              child: const Icon(Icons.storefront_rounded, color: AppColors.primaryBlue, size: 26),
             ),
-            const SizedBox(width: 11),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Expanded(
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.blueChipBg,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                         child: Text(
-                          task.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.cardTitle.copyWith(fontSize: 14),
+                          task.category.toUpperCase(),
+                          style: AppTypography.metadata.copyWith(
+                            color: AppColors.primaryBlue,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                      if (task.isFeatured) _badge('Featured'),
-                    ],
-                  ),
-                  const SizedBox(height: 1),
-                  Text(task.storeName, style: AppTypography.metadata.copyWith(fontSize: 10.5)),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 13, color: AppColors.secondaryText),
-                      const SizedBox(width: 2),
-                      Text(task.distance, style: AppTypography.metadata.copyWith(fontSize: 10)),
-                      const Spacer(),
+                      const SizedBox(width: 6),
                       Text(
-                        '₹${task.reward.toStringAsFixed(0)}',
-                        style: AppTypography.money.copyWith(fontSize: 17),
+                        '• ${task.duration}',
+                        style: AppTypography.metadata.copyWith(fontSize: 10),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    task.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.cardTitle.copyWith(fontSize: 13.5),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    task.location,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.metadata.copyWith(fontSize: 11),
                   ),
                 ],
               ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '₹${task.reward.toStringAsFixed(0)}',
+                  style: AppTypography.cardTitle.copyWith(
+                    color: AppColors.successGreen,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${task.distance} • ${task.duration}',
+                  style: AppTypography.metadata.copyWith(
+                    color: AppColors.orange,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -629,64 +636,280 @@ class _HomeTabState extends State<_HomeTab> {
 
   Widget _earningsStrip() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFEFF7FF), Color(0xFFF9FBFF)],
+          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
         ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFDCEBFB)),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryBlue,
-              shape: BoxShape.circle,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFF334155),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 21),
+            child: const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B), size: 26),
           ),
-          const SizedBox(width: 11),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Complete more. Unlock more.', style: AppTypography.cardTitle.copyWith(fontSize: 13.2)),
-                const SizedBox(height: 2),
-                Text('Your next reward level is just 2 tasks away.', style: AppTypography.metadata.copyWith(fontSize: 10.2)),
+                Text(
+                  'Earn More With Verified Audits',
+                  style: AppTypography.cardTitle.copyWith(color: Colors.white, fontSize: 13.5),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Complete profile & KYC to get instant payouts.',
+                  style: AppTypography.metadata.copyWith(color: const Color(0xFF94A3B8), fontSize: 11),
+                ),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.primaryBlue),
         ],
       ),
     );
   }
+}
 
-  String _assetFor(TaskModel task) {
-    if (task.category.contains('Product')) return 'assets/ui/product_pharmacy.png';
-    if (task.category.contains('Restaurant')) return 'assets/ui/restaurant.png';
-    if (task.category.contains('Survey')) return 'assets/ui/survey.png';
-    return 'assets/ui/store_dmart.png';
+class _HeroImageSlider extends StatefulWidget {
+  const _HeroImageSlider();
+
+  @override
+  State<_HeroImageSlider> createState() => _HeroImageSliderState();
+}
+
+class _HeroImageSliderState extends State<_HeroImageSlider> {
+  final PageController _controller = PageController();
+  int _currentPage = 0;
+  Timer? _timer;
+
+  final List<Map<String, dynamic>> _slides = [
+    {
+      'tag': '✨ HIGH REWARD AUDITS',
+      'title': 'Earn up to ₹1,500\nper Store Audit!',
+      'subtitle': 'Verified mystery audits nearby in Zirakpur.',
+      'buttonText': 'Explore Audits',
+      'colors': [const Color(0xFF0D5AAA), const Color(0xFF0D83DF)],
+      'targetScreen': 'find',
+    },
+    {
+      'tag': '🚀 INSTANT PAYOUTS',
+      'title': 'Fast-Track KYC &\nDirect UPI Transfer!',
+      'subtitle': 'Withdraw your earnings safely into your bank account.',
+      'buttonText': 'Verify Profile',
+      'colors': [const Color(0xFF15803D), const Color(0xFF22C55E)],
+      'targetScreen': 'profile',
+    },
+    {
+      'tag': '🎓 CERTIFIED TASKER',
+      'title': 'Complete Training &\nEarn 20% Bonus!',
+      'subtitle': 'Unlock premium corporate audit tasks.',
+      'buttonText': 'Start Training',
+      'colors': [const Color(0xFF6D28D9), const Color(0xFF9333EA)],
+      'targetScreen': 'training',
+    },
+    {
+      'tag': '🔥 LIVE TASKS',
+      'title': '100+ Active Tasks\nWaiting For You!',
+      'subtitle': 'Submit photos & receipts to claim rewards.',
+      'buttonText': 'Find Tasks',
+      'colors': [const Color(0xFFC2410C), const Color(0xFFF97316)],
+      'targetScreen': 'find',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (_controller.hasClients) {
+        final nextPage = (_currentPage + 1) % _slides.length;
+        _controller.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
-  Widget _badge(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF1E2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        text,
-        style: AppTypography.metadata.copyWith(
-          fontSize: 8.8,
-          color: AppColors.orange,
-          fontWeight: FontWeight.w800,
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onSlideTap(String targetScreen) {
+    if (targetScreen == 'find') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const FindTasksScreen()));
+    } else if (targetScreen == 'profile') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+    } else if (targetScreen == 'training') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const TrainingScreen()));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 164,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: _slides.length,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemBuilder: (context, index) {
+              final slide = _slides[index];
+              final List<Color> colors = slide['colors'];
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: colors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.first.withOpacity(.25),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -24,
+                        top: -22,
+                        child: Container(
+                          width: 155,
+                          height: 155,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(.08),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Image.asset(
+                          'assets/ui/home_banner_person_only.png',
+                          width: 120,
+                          height: 150,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.centerRight,
+                        ),
+                      ),
+                      Positioned(
+                        left: 17,
+                        top: 15,
+                        right: 112,
+                        bottom: 12,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(.18),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                slide['tag'],
+                                style: AppTypography.metadata.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: .5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              slide['title'],
+                              style: AppTypography.screenTitle.copyWith(
+                                color: Colors.white,
+                                fontSize: 20,
+                                height: 1.05,
+                                letterSpacing: -.6,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              slide['subtitle'],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.metadata.copyWith(
+                                color: Colors.white.withOpacity(.92),
+                                fontSize: 10.5,
+                              ),
+                            ),
+                            const Spacer(),
+                            SizedBox(
+                              height: 32,
+                              child: ElevatedButton(
+                                onPressed: () => _onSlideTap(slide['targetScreen']),
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColors.darkNavy,
+                                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      slide['buttonText'],
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.arrow_forward_rounded, size: 14),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
-      ),
+        const SizedBox(height: 9),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            _slides.length,
+            (index) => AnimatedContainer(
+              duration: const Duration(milliseconds: 240),
+              width: index == _currentPage ? 18 : 6,
+              height: 6,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                color: index == _currentPage ? AppColors.primaryBlue : const Color(0xFFD0D7E2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

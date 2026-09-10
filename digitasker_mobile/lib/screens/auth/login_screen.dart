@@ -6,7 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/brand_logo.dart';
 import '../user/tasker_home_screen.dart';
-import 'register_screen.dart';
+import 'multi_step_register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,9 +33,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (ok) {
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const TaskerHomeScreen()),
+        (route) => false,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -247,9 +248,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: () async {
                       final success = await auth.loginWithSocial('google');
                       if (success && context.mounted) {
-                        Navigator.pushReplacement(
+                        Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(builder: (_) => const TaskerHomeScreen()),
+                          (route) => false,
                         );
                       }
                     },
@@ -261,9 +263,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: () async {
                       final success = await auth.loginWithSocial('apple');
                       if (success && context.mounted) {
-                        Navigator.pushReplacement(
+                        Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(builder: (_) => const TaskerHomeScreen()),
+                          (route) => false,
                         );
                       }
                     },
@@ -276,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       InkWell(
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                          MaterialPageRoute(builder: (_) => const MultiStepRegisterScreen()),
                         ),
                         child: Text(
                           'Sign Up',
