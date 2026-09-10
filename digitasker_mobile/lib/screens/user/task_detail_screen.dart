@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/animated_press.dart';
 import 'multi_step_task_completion_screen.dart';
 
 class TaskDetailScreen extends StatefulWidget {
@@ -255,26 +256,34 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> with SingleTickerPr
               child: SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
+                child: AnimatedPress(
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => MultiStepTaskCompletionScreen(task: t)),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Start Task & Upload Evidence', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_rounded, size: 18),
-                    ],
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => MultiStepTaskCompletionScreen(task: t)),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Start Task & Upload Evidence', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward_rounded, size: 18),
+                      ],
+                    ),
                   ),
                 ),
               ),

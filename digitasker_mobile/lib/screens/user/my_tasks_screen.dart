@@ -4,6 +4,8 @@ import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/animated_press.dart';
+import '../../widgets/fade_slide_transition.dart';
 import 'multi_step_task_completion_screen.dart';
 import 'task_detail_screen.dart';
 
@@ -270,12 +272,12 @@ class _MyTasksScreenState extends State<MyTasksScreen> with SingleTickerProvider
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final item = filtered[index];
-        return _buildMyTaskCard(item);
+        return _buildMyTaskCard(item, index);
       },
     );
   }
 
-  Widget _buildMyTaskCard(MyTaskItem item) {
+  Widget _buildMyTaskCard(MyTaskItem item, int index) {
     Color statusBg = const Color(0xFFFEF3C7);
     Color statusColor = const Color(0xFFD97706);
     String statusLabel = 'Under QA Review';
@@ -294,18 +296,21 @@ class _MyTasksScreenState extends State<MyTasksScreen> with SingleTickerProvider
       statusLabel = 'In Progress';
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Column(
+    return FadeSlideTransition(
+      delayIndex: index > 6 ? 6 : index,
+      child: AnimatedPress(
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 4)),
+            ],
+          ),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -437,8 +442,10 @@ class _MyTasksScreenState extends State<MyTasksScreen> with SingleTickerProvider
           ),
         ],
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   List<MyTaskItem> _getSampleMyTasks(TaskProvider provider) {
     return [

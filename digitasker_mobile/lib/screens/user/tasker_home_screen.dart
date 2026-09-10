@@ -7,7 +7,9 @@ import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/animated_press.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/fade_slide_transition.dart';
 import 'find_tasks_screen.dart';
 import 'my_tasks_screen.dart';
 import 'notifications_screen.dart';
@@ -245,10 +247,10 @@ class _HomeTabState extends State<_HomeTab> {
                   ),
                 ),
                 const SizedBox(height: 9),
-                ...displayTasks.take(4).map(
-                      (task) => Padding(
+                ...displayTasks.take(4).toList().asMap().entries.map(
+                      (entry) => Padding(
                         padding: const EdgeInsets.only(bottom: 11),
-                        child: _nearbyTask(context, task),
+                        child: _nearbyTask(context, entry.value, entry.key),
                       ),
                     ),
                 const SizedBox(height: 8),
@@ -466,14 +468,13 @@ class _HomeTabState extends State<_HomeTab> {
           itemCount: categories.length,
           itemBuilder: (ctx, i) {
             final item = categories[i];
-            return InkWell(
+            return AnimatedPress(
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => FindTasksScreen(initialCategory: item.$2),
                 ),
               ),
-              borderRadius: BorderRadius.circular(16),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -548,27 +549,28 @@ class _HomeTabState extends State<_HomeTab> {
     );
   }
 
-  Widget _nearbyTask(BuildContext context, TaskModel task) {
-    return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
-      ),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.darkNavy.withOpacity(.04),
-              blurRadius: 12,
-              offset: const Offset(0, 5),
-            ),
-          ],
+  Widget _nearbyTask(BuildContext context, TaskModel task, int index) {
+    return FadeSlideTransition(
+      delayIndex: index + 1,
+      child: AnimatedPress(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
         ),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.darkNavy.withOpacity(.04),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
         child: Row(
           children: [
             Container(
@@ -652,8 +654,9 @@ class _HomeTabState extends State<_HomeTab> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _earningsStrip() {
     return Container(

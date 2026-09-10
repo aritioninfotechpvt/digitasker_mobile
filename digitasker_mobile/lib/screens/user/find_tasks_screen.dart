@@ -5,6 +5,8 @@ import '../../models/task_model.dart';
 import '../../providers/task_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/animated_press.dart';
+import '../../widgets/fade_slide_transition.dart';
 import 'multi_step_task_completion_screen.dart';
 import 'task_detail_screen.dart';
 
@@ -411,17 +413,24 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
 
   Widget _buildWebTaskCard(BuildContext context, TaskModel task, int index) {
     final slotsLeft = 16 + (index * 4);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 12, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Column(
+    return FadeSlideTransition(
+      delayIndex: index > 6 ? 6 : index,
+      child: AnimatedPress(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task)),
+        ),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(color: Color(0x0A000000), blurRadius: 12, offset: Offset(0, 4)),
+            ],
+          ),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Store Image Header with Targeted Match Badge
@@ -583,7 +592,9 @@ class _FindTasksScreenState extends State<FindTasksScreen> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   void _showFilterBottomSheet(BuildContext context) {
