@@ -3,6 +3,7 @@ import '../models/task_model.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'animated_press.dart';
 import 'status_chip.dart';
 
 class TaskCard extends StatefulWidget {
@@ -26,32 +27,31 @@ class _TaskCardState extends State<TaskCard> {
   Widget build(BuildContext context) {
     final task = widget.task;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        border: Border.all(color: AppColors.borderColor, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        child: InkWell(
+    return AnimatedPress(
+      onTap: widget.onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-          onTap: widget.onTap,
+          border: Border.all(color: AppColors.borderColor, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.cardPadding),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Real Photography Thumbnail (80 x 80px)
+                // Store Photography Thumbnail (80 x 80px)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
@@ -144,7 +144,7 @@ class _TaskCardState extends State<TaskCard> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Status & Category Chips
+                      // Status Chips
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
