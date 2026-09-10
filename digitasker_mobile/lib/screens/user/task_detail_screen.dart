@@ -2,107 +2,495 @@ import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
-import 'submit_evidence_screen.dart';
+import 'multi_step_task_completion_screen.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final TaskModel task;
   const TaskDetailScreen({super.key, required this.task});
+
   @override
   State<TaskDetailScreen> createState() => _TaskDetailScreenState();
 }
 
-class _TaskDetailScreenState extends State<TaskDetailScreen> {
-  int tab = 0;
+class _TaskDetailScreenState extends State<TaskDetailScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = widget.task;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(children: [
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.darkNavy),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Task Details', style: AppTypography.screenTitle.copyWith(fontSize: 18)),
+            Text('InsightLoop USER Workspace', style: AppTypography.metadata.copyWith(fontSize: 11, color: const Color(0xFF64748B))),
+          ],
+        ),
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.share_outlined, color: AppColors.darkNavy)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.bookmark_border_rounded, color: AppColors.darkNavy)),
+        ],
+      ),
+      body: Column(
+        children: [
           Expanded(
-            child: CustomScrollView(slivers: [
-              SliverToBoxAdapter(child: _hero(context, t)),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
-                sliver: SliverList(delegate: SliverChildListDelegate([
-                  Row(children: [
-                    Container(width: 50, height: 50, decoration: BoxDecoration(color: AppColors.greenChipBg, borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.storefront_rounded, color: AppColors.successGreen)),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(t.title, style: AppTypography.sectionTitle), Text(t.storeName, style: AppTypography.metadata)])),
-                    Text('₹${t.reward.toStringAsFixed(0)}', style: AppTypography.money.copyWith(fontSize: 23)),
-                  ]),
-                  const SizedBox(height: 14),
-                  Row(children: [
-                    _meta(Icons.location_on_outlined, t.distance),
-                    const SizedBox(width: 18),
-                    _meta(Icons.schedule_outlined, t.duration),
-                    const SizedBox(width: 18),
-                    _meta(Icons.store_mall_directory_outlined, t.locationType),
-                  ]),
-                  const SizedBox(height: 18),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // QC Revision Requested Banner
+                  _buildQCRevisionBanner(context),
+
+                  // Main Store Header Card
                   Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: const Color(0xFFF4F6F9), borderRadius: BorderRadius.circular(15)),
-                    child: Row(children: List.generate(3, (i) {
-                      final labels = ['Details', 'Instructions', 'Requirements'];
-                      final active = tab == i;
-                      return Expanded(child: GestureDetector(onTap: () => setState(() => tab = i), child: Container(padding: const EdgeInsets.symmetric(vertical: 10), decoration: BoxDecoration(color: active ? Colors.white : Colors.transparent, borderRadius: BorderRadius.circular(12), boxShadow: active ? [BoxShadow(color: AppColors.darkNavy.withOpacity(.04), blurRadius: 10)] : []), child: Text(labels[i], textAlign: TextAlign.center, style: AppTypography.metadata.copyWith(color: active ? AppColors.primaryBlue : AppColors.bodyText, fontWeight: FontWeight.w700)))));
-                    })),
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Store Image Thumbnail
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            t.imageUrl.isNotEmpty ? t.imageUrl : 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=800&q=80',
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              height: 180,
+                              color: AppColors.darkNavy,
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.storefront_rounded, size: 54, color: Colors.white54),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Badges Row
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(6)),
+                              child: const Text('🇮🇳 Country: India', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF15803D))),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: const Color(0xFFF3E8FF), borderRadius: BorderRadius.circular(6)),
+                              child: Text(t.locationType == 'Online' ? 'Digital Task' : 'Physical / Digital', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF7E22CE))),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: const Color(0xFFE0F2FE), borderRadius: BorderRadius.circular(6)),
+                              child: Text(t.category, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0369A1))),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Title & Partner Subtitle
+                        Text(t.title, style: AppTypography.screenTitle.copyWith(fontSize: 20)),
+                        const SizedBox(height: 3),
+                        Text('Verified Brand · ${t.category}', style: AppTypography.metadata.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        const SizedBox(height: 12),
+
+                        // Metadata line
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 8,
+                          children: [
+                            _buildMetaItem(Icons.public_rounded, t.location),
+                            _buildMetaItem(Icons.timer_outlined, t.duration),
+                            _buildMetaItem(Icons.people_outline_rounded, '16 slots left'),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_month_outlined, size: 15, color: Color(0xFF64748B)),
+                            const SizedBox(width: 5),
+                            Text('Task Starts: 2026-09-01 · ⏳ Expires: 2026-09-30', style: AppTypography.metadata.copyWith(fontSize: 12)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Reward Payout
+                        Text(
+                          '₹${t.reward.toStringAsFixed(0)}',
+                          style: AppTypography.screenTitle.copyWith(fontSize: 26, color: AppColors.successGreen),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 22),
-                  if (tab == 0) ...[
-                    Text('Task Overview', style: AppTypography.sectionTitle.copyWith(fontSize: 18)),
-                    const SizedBox(height: 8),
-                    Text(t.description, style: AppTypography.body),
-                    const SizedBox(height: 18),
-                    _requirement(Icons.camera_alt_outlined, 'Take store photos'),
-                    _requirement(Icons.inventory_2_outlined, 'Check product availability'),
-                    _requirement(Icons.quiz_outlined, 'Answer a few questions'),
-                    _requirement(Icons.verified_outlined, 'Submit and earn ₹${t.reward.toStringAsFixed(0)}'),
-                  ] else if (tab == 1) ...[
-                    Text('Before You Start', style: AppTypography.sectionTitle.copyWith(fontSize: 18)),
-                    const SizedBox(height: 10),
-                    _bullet('Reach the assigned store during the specified task window.'),
-                    _bullet('Do not reveal that you are completing an audit.'),
-                    _bullet('Capture clear, original photos from your device camera.'),
-                    _bullet('Answer every mandatory question before submission.'),
-                  ] else ...[
-                    Text('Submission Requirements', style: AppTypography.sectionTitle.copyWith(fontSize: 18)),
-                    const SizedBox(height: 10),
-                    _requirement(Icons.location_searching_rounded, 'GPS check-in within the allowed radius'),
-                    _requirement(Icons.photo_library_outlined, 'Minimum 2 clear photos'),
-                    _requirement(Icons.receipt_long_outlined, 'Invoice/photo proof when requested'),
-                    _requirement(Icons.access_time_rounded, 'Complete within the assigned time window'),
-                  ],
-                ])),
+
+                  const SizedBox(height: 12),
+
+                  // Navigation Tabs Bar (Overview / Eligibility & Rules / Required Submissions / Location)
+                  Container(
+                    color: Colors.white,
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      labelColor: AppColors.primaryBlue,
+                      unselectedLabelColor: const Color(0xFF64748B),
+                      indicatorColor: AppColors.primaryBlue,
+                      indicatorWeight: 3,
+                      labelStyle: AppTypography.cardTitle.copyWith(fontSize: 13),
+                      unselectedLabelStyle: AppTypography.body.copyWith(fontSize: 13),
+                      tabs: const [
+                        Tab(text: 'Overview'),
+                        Tab(text: 'Eligibility & Rules'),
+                        Tab(text: 'Required Submissions'),
+                        Tab(text: 'Location / Platform'),
+                      ],
+                    ),
+                  ),
+
+                  // Tab Views Content
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Overview Content
+                        Text('Task Description', style: AppTypography.sectionTitle.copyWith(fontSize: 16)),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Complete this ${t.category} task for Verified Brand. Ensure you satisfy all eligibility criteria and upload requested proof before completing your slot.',
+                          style: AppTypography.body.copyWith(fontSize: 13.5, height: 1.45),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Eligibility Criteria
+                        Text('Eligibility Criteria', style: AppTypography.sectionTitle.copyWith(fontSize: 16)),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(8)),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF15803D)),
+                                  SizedBox(width: 5),
+                                  Text('Country: India 🇮🇳', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF15803D))),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(8)),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF15803D)),
+                                  SizedBox(width: 5),
+                                  Text('KYC Verified', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF15803D))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Required Evidence Submissions (5)
+                        Text('Required Evidence Submissions (5)', style: AppTypography.sectionTitle.copyWith(fontSize: 16)),
+                        const SizedBox(height: 10),
+                        _buildSubmissionItem('Store front photo', isRequired: true),
+                        _buildSubmissionItem('Product shelf & display photo', isRequired: true),
+                        _buildSubmissionItem('Staff courtesy check & pricing notes', isRequired: true),
+                        _buildSubmissionItem('5-Star Google Review & Profile Handle', isRequired: true),
+                        _buildSubmissionItem('Purchase invoice or receipt photo', isRequired: false),
+
+                        const SizedBox(height: 20),
+
+                        // Target Platform / Location Card
+                        _buildTargetLocationCard(t),
+                        const SizedBox(height: 16),
+
+                        // About the Brand & Company Card
+                        _buildAboutBrandCard(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ]),
+            ),
           ),
+
+          // Bottom Action Bar
           Container(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 16),
-            decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: AppColors.borderColor))),
-            child: SafeArea(top: false, child: SizedBox(width: double.infinity, height: 52, child: ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SubmitEvidenceScreen(task: t))), child: const Text('Accept Task')))),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+              boxShadow: [BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, -4))],
+            ),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MultiStepTaskCompletionScreen(task: t)),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Start Task & Upload Evidence', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ]),
+        ],
       ),
     );
   }
 
-  Widget _hero(BuildContext context, TaskModel task) => SizedBox(
-    height: 205,
-    child: Stack(fit: StackFit.expand, children: [
-      Image.asset('assets/ui/store_dmart.png', fit: BoxFit.cover),
-      const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0x66000000), Colors.transparent], begin: Alignment.topCenter, end: Alignment.center))),
-      Positioned(top: 12, left: 12, child: _roundAction(Icons.arrow_back_rounded, () => Navigator.pop(context))),
-      Positioned(top: 12, right: 58, child: _roundAction(Icons.favorite_border_rounded, () {})),
-      Positioned(top: 12, right: 12, child: _roundAction(Icons.ios_share_rounded, () {})),
-    ]),
-  );
+  Widget _buildQCRevisionBanner(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFDBA74)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFEA580C), size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'QC Revision Requested (SUB-4178)',
+                  style: AppTypography.cardTitle.copyWith(color: const Color(0xFFC2410C), fontSize: 13.5),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '*Review screenshot missing profile handle name. Please re-upload photo showing your 5-star Google review and handle.*',
+            style: AppTypography.body.copyWith(fontSize: 12, color: const Color(0xFF9A3412), height: 1.35),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 36,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MultiStepTaskCompletionScreen(task: widget.task)),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEA580C),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Re-submit Evidence', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  SizedBox(width: 6),
+                  Icon(Icons.arrow_forward_rounded, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _roundAction(IconData icon, VoidCallback onTap) => Material(color: Colors.white, borderRadius: BorderRadius.circular(20), child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(20), child: SizedBox(width: 38, height: 38, child: Icon(icon, size: 20))));
-  Widget _meta(IconData icon, String text) => Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 15, color: AppColors.secondaryText), const SizedBox(width: 4), Text(text, style: AppTypography.metadata)]);
-  Widget _requirement(IconData icon, String text) => Padding(padding: const EdgeInsets.only(bottom: 13), child: Row(children: [Container(width: 35, height: 35, decoration: BoxDecoration(color: AppColors.blueChipBg, borderRadius: BorderRadius.circular(10)), child: Icon(icon, size: 18, color: AppColors.primaryBlue)), const SizedBox(width: 11), Expanded(child: Text(text, style: AppTypography.body.copyWith(color: AppColors.darkNavy, fontWeight: FontWeight.w500)))]));
-  Widget _bullet(String text) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Padding(padding: EdgeInsets.only(top: 4), child: Icon(Icons.check_circle_rounded, color: AppColors.successGreen, size: 18)), const SizedBox(width: 9), Expanded(child: Text(text, style: AppTypography.body))]));
+  Widget _buildMetaItem(IconData icon, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: const Color(0xFF64748B)),
+        const SizedBox(width: 5),
+        Text(label, style: AppTypography.metadata.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.darkNavy)),
+      ],
+    );
+  }
+
+  Widget _buildSubmissionItem(String title, {required bool isRequired}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_outline_rounded, color: AppColors.primaryBlue, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(title, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600, fontSize: 13)),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: isRequired ? const Color(0xFFFEE2E2) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              isRequired ? 'Required' : 'Optional',
+              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: isRequired ? const Color(0xFFDC2626) : const Color(0xFF64748B)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTargetLocationCard(TaskModel task) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Target Platform / Location', style: AppTypography.cardTitle.copyWith(fontSize: 15)),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.location_on_rounded, color: Color(0xFFDC2626), size: 24),
+                const SizedBox(height: 6),
+                Text('Verified Brand', style: AppTypography.cardTitle.copyWith(fontSize: 14)),
+                const SizedBox(height: 2),
+                Text('${task.locationType} · ${task.location}', style: AppTypography.metadata.copyWith(fontSize: 12)),
+                const SizedBox(height: 4),
+                const Text('🇮🇳 India', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF15803D))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutBrandCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('About the Brand & Company', style: AppTypography.cardTitle.copyWith(fontSize: 15)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0F2FE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.verified_user_rounded, color: AppColors.primaryBlue, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Verified Brand', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.darkNavy)),
+                    SizedBox(height: 2),
+                    Text('✓ Verified Partner Brand', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF15803D))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Leading brand analytics and retail mystery audit studio delivering real-time field data & verified reviews across India.',
+            style: AppTypography.metadata.copyWith(fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('🌐 Visit Official Website', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primaryBlue)),
+                  SizedBox(width: 4),
+                  Icon(Icons.open_in_new_rounded, size: 15, color: AppColors.primaryBlue),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
