@@ -7,6 +7,7 @@ import 'providers/wallet_provider.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_spacing.dart';
+import 'widgets/mobile_viewport_wrapper.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,6 +75,9 @@ class DigiLitesStudioApp extends StatelessWidget {
             ),
           ),
         ),
+        builder: (context, child) {
+          return MobileViewportWrapper(child: child ?? const SizedBox());
+        },
         home: const SplashScreen(),
       ),
     );
