@@ -41,7 +41,6 @@ class DigiLitesStudioApp extends StatelessWidget {
             seedColor: AppColors.primaryBlue,
             primary: AppColors.primaryBlue,
             surface: Colors.white,
-            background: AppColors.appBackground,
           ),
           textTheme: inter.apply(bodyColor: AppColors.bodyText, displayColor: AppColors.darkNavy),
           scaffoldBackgroundColor: AppColors.appBackground,

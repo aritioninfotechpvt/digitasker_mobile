@@ -37,6 +37,12 @@ class _MultiStepTaskCompletionScreenState
   }
 
   @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.appBackground,
@@ -284,8 +290,17 @@ class _MultiStepTaskCompletionScreenState
                 const SizedBox(height: 8),
                 Text('Task: ${widget.task.title}'),
                 Text('Target: ${widget.task.storeName}'),
-                Text('Location: Verified GPS (120m)'),
+                const Text('Location: Verified GPS (120m)'),
                 Text('Reward: ₹${widget.task.reward.toStringAsFixed(0)}'),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Audit Notes (Optional)',
+                    hintText: 'Enter any additional observations...',
+                  ),
+                  maxLines: 2,
+                ),
               ],
             ),
           ),

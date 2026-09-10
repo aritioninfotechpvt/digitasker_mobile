@@ -255,6 +255,23 @@ class _MultiStepRegisterScreenState extends State<MultiStepRegisterScreen> {
               if (val != null) setState(() => _selectedAgeGroup = val);
             },
           ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: _selectedOccupation,
+            decoration: const InputDecoration(
+              labelText: 'Occupation',
+              prefixIcon: Icon(Icons.work_outline_rounded),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'Auditor / Field Professional', child: Text('Auditor / Field Professional')),
+              DropdownMenuItem(value: 'Freelancer / Gig Worker', child: Text('Freelancer / Gig Worker')),
+              DropdownMenuItem(value: 'Student', child: Text('Student')),
+              DropdownMenuItem(value: 'Other', child: Text('Other')),
+            ],
+            onChanged: (val) {
+              if (val != null) setState(() => _selectedOccupation = val);
+            },
+          ),
         ],
       );
     } else {
