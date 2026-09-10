@@ -302,6 +302,8 @@ class _HomeTabState extends State<_HomeTab> {
                   children: [
                     Text(
                       'Your location',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.metadata.copyWith(
                         color: Colors.white.withOpacity(.72),
                         fontSize: 9.5,
@@ -309,6 +311,8 @@ class _HomeTabState extends State<_HomeTab> {
                     ),
                     Text(
                       'Zirakpur, Punjab',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.body.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -589,24 +593,30 @@ class _HomeTabState extends State<_HomeTab> {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.blueChipBg,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          task.category.toUpperCase(),
-                          style: AppTypography.metadata.copyWith(
-                            color: AppColors.primaryBlue,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.blueChipBg,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            task.category.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.metadata.copyWith(
+                              color: AppColors.primaryBlue,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '• ${task.duration}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: AppTypography.metadata.copyWith(fontSize: 10),
                       ),
                     ],
@@ -643,6 +653,8 @@ class _HomeTabState extends State<_HomeTab> {
                 const SizedBox(height: 2),
                 Text(
                   '${task.distance} • ${task.duration}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.metadata.copyWith(
                     color: AppColors.orange,
                     fontSize: 10,
@@ -838,10 +850,10 @@ class _HeroImageSliderState extends State<_HeroImageSlider> {
                         ),
                       ),
                       Positioned(
-                        left: 17,
-                        top: 15,
-                        right: 112,
-                        bottom: 12,
+                        left: 16,
+                        top: 14,
+                        right: 105,
+                        bottom: 10,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -853,6 +865,8 @@ class _HeroImageSliderState extends State<_HeroImageSlider> {
                               ),
                               child: Text(
                                 slide['tag'],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: AppTypography.metadata.copyWith(
                                   color: Colors.white,
                                   fontSize: 8.5,
@@ -864,11 +878,13 @@ class _HeroImageSliderState extends State<_HeroImageSlider> {
                             const SizedBox(height: 6),
                             Text(
                               slide['title'],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: AppTypography.screenTitle.copyWith(
                                 color: Colors.white,
-                                fontSize: 20,
+                                fontSize: 18.5,
                                 height: 1.05,
-                                letterSpacing: -.6,
+                                letterSpacing: -.5,
                               ),
                             ),
                             const SizedBox(height: 5),
@@ -890,15 +906,19 @@ class _HeroImageSliderState extends State<_HeroImageSlider> {
                                   elevation: 0,
                                   backgroundColor: Colors.white,
                                   foregroundColor: AppColors.darkNavy,
-                                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                                  padding: const EdgeInsets.symmetric(horizontal: 11),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      slide['buttonText'],
-                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                                    Flexible(
+                                      child: Text(
+                                        slide['buttonText'],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                                      ),
                                     ),
                                     const SizedBox(width: 4),
                                     const Icon(Icons.arrow_forward_rounded, size: 14),
