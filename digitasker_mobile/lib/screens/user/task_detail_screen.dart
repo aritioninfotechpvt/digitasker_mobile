@@ -299,34 +299,36 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> with SingleTickerPr
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
+        color: const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFDBA74)),
+        border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Color(0xFFEA580C), size: 22),
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 22),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'QC Revision Requested (SUB-4178)',
-                  style: AppTypography.cardTitle.copyWith(color: const Color(0xFFC2410C), fontSize: 13.5),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.cardTitle.copyWith(color: const Color(0xFF991B1B), fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             '*Review screenshot missing profile handle name. Please re-upload photo showing your 5-star Google review and handle.*',
-            style: AppTypography.body.copyWith(fontSize: 12, color: const Color(0xFF9A3412), height: 1.35),
+            style: AppTypography.body.copyWith(fontSize: 12, color: const Color(0xFF7F1D1D), height: 1.4),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            height: 36,
+            height: 44,
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -335,15 +337,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> with SingleTickerPr
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEA580C),
+                backgroundColor: const Color(0xFFDC2626),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Re-submit Evidence', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(
+                    'Re-submit Evidence & Fix',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                  ),
                   SizedBox(width: 6),
                   Icon(Icons.arrow_forward_rounded, size: 16),
                 ],

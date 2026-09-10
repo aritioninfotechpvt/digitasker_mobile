@@ -358,6 +358,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> with SingleTickerProvider
                             children: [
                               if (item.status == 'completed') const Icon(Icons.check_circle_rounded, size: 11, color: Color(0xFF059669)),
                               if (item.status == 'under_review') const Icon(Icons.hourglass_top_rounded, size: 11, color: Color(0xFFD97706)),
+                              if (item.status == 'revision_needed') const Icon(Icons.warning_amber_rounded, size: 11, color: Color(0xFFE11D48)),
                               const SizedBox(width: 3),
                               Text(statusLabel, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: statusColor)),
                             ],
@@ -404,7 +405,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> with SingleTickerProvider
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            height: 40,
+            height: 44,
             child: OutlinedButton(
               onPressed: () {
                 final dummyTask = TaskModel(
@@ -422,17 +423,33 @@ class _MyTasksScreenState extends State<MyTasksScreen> with SingleTickerProvider
                 );
               },
               style: OutlinedButton.styleFrom(
-                backgroundColor: item.status == 'completed' ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC),
-                foregroundColor: item.status == 'completed' ? const Color(0xFF047857) : AppColors.primaryBlue,
-                side: BorderSide(color: item.status == 'completed' ? const Color(0xFFA7F3D0) : const Color(0xFFCBD5E1)),
+                backgroundColor: item.status == 'revision_needed'
+                    ? const Color(0xFFDC2626)
+                    : (item.status == 'completed' ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC)),
+                foregroundColor: item.status == 'revision_needed'
+                    ? Colors.white
+                    : (item.status == 'completed' ? const Color(0xFF047857) : AppColors.primaryBlue),
+                side: BorderSide(
+                  color: item.status == 'revision_needed'
+                      ? const Color(0xFFB91C1C)
+                      : (item.status == 'completed' ? const Color(0xFFA7F3D0) : const Color(0xFFCBD5E1)),
+                ),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    item.status == 'completed' ? 'View Completed Proof' : (item.status == 'under_review' ? 'Submitted (Reviewing)' : 'View Task Details'),
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  Flexible(
+                    child: Text(
+                      item.status == 'revision_needed'
+                          ? '⚠️ QC Revision Requested - Fix Now'
+                          : (item.status == 'completed'
+                              ? 'View Completed Proof'
+                              : (item.status == 'under_review' ? 'Submitted (Reviewing)' : 'View Task Details')),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
                   ),
                   const SizedBox(width: 6),
                   const Icon(Icons.chevron_right_rounded, size: 18),
